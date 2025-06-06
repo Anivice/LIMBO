@@ -22,4 +22,14 @@ function(add_emulation_target NAME FLOPPY_DRIVE_FILE)
                 -m 32M -rtc base=localtime -boot a
             COMMENT "Booting from floppy disk ${FDA}..."
     )
+
+    add_custom_target(${NAME}_debug
+            COMMAND ${QEMU_EXEC} -smp 1 -cpu 486
+                -drive if=floppy,index=0,format=raw,file=${CMAKE_BINARY_DIR}/${FLOPPY_DRIVE_FILE}
+                -drive if=ide,index=0,format=raw,file=${HARD_DISK_FILE}
+                -m 32M -rtc base=localtime -boot a
+                -gdb tcp::1234 -S -monitor stdio -d int,in_asm,cpu,exec,in_asm
+                -D qemu_${NAME}_debug.log
+            COMMENT "Booting from floppy disk ${FDA}..."
+    )
 endfunction()
