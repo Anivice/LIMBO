@@ -47,6 +47,45 @@ print: ;print_msg(si=null terminated msg)
     popa
     ret
 
+set_descriptor: ; set_descriptor(%eax=baseline,%ebx=boundary,%ecx=attribute, %fs:%si=target)
+    push        eax
+    push        ebx
+    push        ecx
+    push        edx
+    push        fs
+    push        si
+
+    ; boundary
+    mov         edx,                    ebx                 ; read boundary to edx
+    mov         word [fs:si+0x00],      dx                  ; boundary 0-15
+    shr         edx,                    16                  ; move higher 16 bits downwards
+    and         dx,                     0xF                 ; only last 4bits are valid
+    mov word    [fs:si+0x06],           dx                  ; boundary 16-19
+
+    ; baseline
+    mov         edx,                    eax                 ; read baseline to edx
+    mov word    [fs:si+0x02],           dx                  ; baseline bit 0-15
+    shr         edx,                    16                  ; move higher 16 bits downwards
+    mov byte    [fs:si+0x04],           dl                  ; baseline bit 16-23
+    mov byte    [fs:si+0x07],           dh                  ; baseline bit 24-31
+
+    ; attribute
+    mov         edx,                    ecx
+    and         dh,                     0x0F                ; attribute bites is 12bits
+    mov byte    [fs:si+0x05],           dl                  ; attribute bit 0-7
+    mov byte    dl,                     [fs:si+0x06]        ; loads [6]
+    shl         dh,                     4                   ; move last 4bits to higher 4bits
+    or          dh,                     dl                  ; concentrate last 4bits from boundary to dh
+    mov byte    [fs:si+0x06],           dh                  ; attribute bit 0-7, and boundary highest 4bits
+
+    pop         si
+    pop         fs
+    pop         edx
+    pop         ecx
+    pop         ebx
+    pop         eax
+    ret
+
 _entry_point: ; _entry_point()
     pusha
     push        es
@@ -54,8 +93,119 @@ _entry_point: ; _entry_point()
     push        ss
 
     ; print greeting message:
-    mov         si,         greet
+    mov         si,                     greet
     call        print
+
+
+    ; load GDT location to %eax
+    mov         ax,                     gdt             ; move GDT segment offset to ax
+    shr         ax,                     4               ; >> 4, so ax is now segment address
+    mov         bx,                     ds              ; read ds to bx
+    add         ax,                     bx              ; adds ds to ax, so ax is now the actual segment address
+    mov         es,                     ax              ; move the actual segment address to %es
+
+    ; #1: NULL
+    mov dword   es:[0x00],              0x00000000
+    mov dword   es:[0x04],              0x00000000
+
+    ; baseline:     0x00
+    ; limit:        0xFFFFF
+    ; attribute:    0xC92 -> [1] [1] [0] [0]        [1] [0 0] [1]        [0010]
+    ;                         │   │   │   │          │    │    │           │
+    ;                         │   │   │   │          │    │    │           └─> TYPE [X][E/C][W/R][A]
+    ;                         │   │   │   │          │    │    │                Code Segment:
+    ;                         │   │   │   │          │    │    │                    - X: 1: Code Segment, 0: Data Segment
+    ;                         │   │   │   │          │    │    │                    - C: Privilege Compliance. 1 allows unprivileged code to execute this region
+    ;                         │   │   │   │          │    │    │                    - R: Readable (0 unreadable, 1 readable)
+    ;                         │   │   │   │          │    │    │                    - A: Accessed, Marked by CPU automatically
+    ;                         │   │   │   │          │    │    │                Data Segment:
+    ;                         │   │   │   │          │    │    │                    - X: 1: Code Segment, 0: Data Segment
+    ;                         │   │   │   │          │    │    │                    - E: 1: Expand Downward, 0: Expand Upwards (since segment start)
+    ;                         │   │   │   │          │    │    │                    - W: 1: Writable, 0: Write-Protected
+    ;                         │   │   │   │          │    │    │                    - A: Accessed, Marked by CPU automatically
+    ;                         │   │   │   │          │    │    │
+    ;                         │   │   │   │          │    │    └─> System (Descriptor Type)
+    ;                         │   │   │   │          │    │             0 being system
+    ;                         │   │   │   │          │    │             1 being code/data(stack is data) segment
+    ;                         │   │   │   │          │    └──────> DPL, Descriptor Privilege Level
+    ;                         │   │   │   │          └───────────> Segment Present, used as swap flag
+    ;                         │   │   │   │
+    ;                         │   │   │   └─> Available (Unused by CPU)
+    ;                         │   │   └─────> 64bit indicator, 0 in 32bit mode
+    ;                         │   └─────────> D/B, default operation size
+    ;                         │                 (set to 1 to indicate 32bit)
+    ;                         └─────────────> Granularity (4KB?)
+    ;
+
+    ; put es in fs
+    mov         dx,                     es
+    mov         fs,                     dx
+
+    ; #1, data segment
+    xor         eax,                    eax             ; baseline: 0x00
+    mov         ebx,                    0xFFFFF         ; limit: 0xFFFFF (4G)
+    mov         ecx,                    0xC92           ; Attribute: 4KB, 32Bit, Segment Present, DPL=0, d-w-
+    mov         si,                     8               ; descriptor is at fs:8
+    call        set_descriptor                          ; == 0x0000ffff00cf9200
+
+    ; #2, code segment
+    xor         eax,                    eax
+    mov         ax,                     cs              ; baseline: current segment
+    shl         eax,                    4               ; shift left 4 bits
+    mov         ebx,                    0xFFFF          ; limit: 64KB
+    mov         ecx,                    0x498           ; attr: 0100 1001 1000 : 32bit, Segment Present, DPL=0, x---
+    mov         si,                     16              ; descriptor is at fs:16
+    call        set_descriptor
+
+    ; #3, stack segment
+    xor         eax,                    eax
+    mov         ax,                     ss                          ; baseline: current segment
+    shl         eax,                    4
+    mov         ebx,                    _stack_end - _stack_start   ; limit
+    mov         ecx,                    0x496                       ; attr: 0100 1001 0110
+    mov         si,                     24
+    call        set_descriptor
+
+    ; #4, VGA Video Memory
+    mov         eax,                    0x0b8000        ; baseline: current segment
+    mov         ebx,                    0xFFFF            ; 2000 characters, 4000 bytes
+    mov         ecx,                    0xC92           ; attr: 0100 1001 0010
+    mov         si,                     32
+    call        set_descriptor
+
+    ; GDT descriptor:
+    mov word    [gdt_boundary],         39              ; table boundary
+    xor         eax,                    eax
+    mov         ax,                     fs              ; table base
+    shl         eax,                    4               ; convert to linear address
+    mov dword   [gdt_base],             eax
+
+    ; load descriptor
+    lgdt        [ds:gdt_boundary]
+
+    ; disable A20
+    in          al,                     0x92
+    or          al,                     0000_0010B
+    out         0x92,                   al
+
+    ; disable interrupt
+    cli
+    mov         eax,                    cr0
+    or          eax,                    1               ; enable Protected Mode
+    mov         cr0,                    eax
+
+    ; Enter 32bit Protected Mode:
+    jmp dword 0x0010:flush16              ; use jmp to force clear CPU cache generated in 16bit mode
+flush16:
+    [bits 32]
+    mov         eax,                    0x20            ; 4th selector, video memory
+    mov         es,                     ax              ; load video memory segment
+    mov         edi,                    0               ; upper-left corner
+
+    mov byte    [es:0x00000],           '#'
+    jmp         $
+
+    [bits 16]
 
     pop         ss
     pop         ds
@@ -74,10 +224,20 @@ _code_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 segment _data_head align=16
 _data_start:
-
 segment data align=16 vstart=0
 greet:
-    db "                    LIMBO KERNEL LOADER VERSION 0.0.1", 0x0D, 0x0A, 0x00
+    db "                    LIMBO KERNEL LOADER VERSION 0.0.1", 0x0D, 0x0A
+    db "[LIMBO LOADER]: Loader is now setting up 32bit Protected Mode.", 0x0D, 0x0A, 0x00
+
+align 16, db 0
+gdt:
+resb 64
+
+gdt_boundary:
+    dw 0
+gdt_base:
+    dd 0
+
 segment _data_tail align=16
 _data_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
