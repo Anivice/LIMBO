@@ -1,4 +1,4 @@
-; Boot sector, responsible for loading second stage program
+; Boot sector, responsible for loading second stage program (max 64KB)
 
 [bits 16]
 [org 0x7C00]
@@ -97,7 +97,7 @@ disk_error:
     jmp $
 
 .disk_error_msg:
-    db "[FDA]: Read error (sec:", 0x00
+    db "[MBR FDA]: Floopy disk read error (sec:", 0x00
 .disk_err_msg_pt2:
     db ", cnt:", 0x00
 .disk_err_msg_pt3:
@@ -192,7 +192,7 @@ start:
 
     ; Now we clear es to 0, so that we can access our own data section.
     ; with ds now point to the program's own data section, our default
-    ; data addressing is now invalid! Luckily, MBR code position is known
+    ; data addressing is now invalid! Luckily, MBR code position is known[MBR ERROR]
     ; so we can override with known values, in this case, the easiest one is
     ; to just use '0x00'
     xor             cx,                     cx
@@ -211,14 +211,17 @@ start:
     mov             ds,                     cx
     mov             bp,                     _unexpected_return
     call            print_msg
+
+    cli
+halt_system:
     hlt
-    jmp             $
+    jmp             halt_system
 
 _unexpected_return:
-    db "[ERROR]: Unexpected return from stage 2 loader!", 0x00
+    db "[MBR ERROR]: Unexpected return from loader!", 0x0D, 0x0A, 0x00
 
 _message_mbr_loader:
-    db "MBR loader is now reading stage 2 loader...", 0x00
+    db "[MBR INFO]: MBR loader is now reading stage 2 loader...", 0x00
 
 _info_program_size:
     db "size ", 0x00
@@ -232,10 +235,8 @@ _done:
 _far_call:
     dw 0, 0
 
-; What does this do and why it's here? good question. This thing does one job, ensure alignment of _buffer without
-; having to setup a separate code segmentation that will messing with the code size
-times 16 - (($ - $$) % 16) db 0
-
+; buffer is a segment, need to be 16 byte aligned
+align 16, db 0
 _buffer:
 
 times 510 - ($ - $$) db 0

@@ -1,4 +1,7 @@
 find_program(NASM_EXECUTABLE nasm REQUIRED)
+find_program(CAT_EXECUTABLE cat REQUIRED)
+find_program(DD_EXECUTABLE dd REQUIRED)
+
 message(STATUS "Found nasm: ${NASM_EXECUTABLE}")
 
 function(split_on_dot OUT_VAR IN_STRING)
@@ -48,5 +51,43 @@ function(add_asm_target FILE)
     add_custom_target(${FILEBASE}_MBR_BINARY ALL
             DEPENDS ${OUTFILE}
             COMMENT "Building binary target ${OUTFILE}"
+    )
+endfunction()
+
+function(concatenate_files)
+    if (${ARGC} LESS 2)
+        message(FATAL_ERROR "Incorrect use of this function. Expecting at least two arguments.")
+    endif ()
+
+    set(arg_list ${ARGN})
+    list(GET arg_list 0 output_filename)
+    list(REMOVE_AT arg_list 0)
+
+    set(DD_COMMAND "${DD_EXECUTABLE} of=${CMAKE_CURRENT_BINARY_DIR}/${output_filename} bs=512 conv=sync,fdatasync iflag=fullblock")
+    set(CAT_COMMAND "${CAT_EXECUTABLE}")
+    foreach(arg IN LISTS arg_list)
+        set(CAT_COMMAND "${CAT_COMMAND} ${CMAKE_CURRENT_BINARY_DIR}/${arg}")
+    endforeach()
+
+    set(COMMAND "${CAT_COMMAND} | ${DD_COMMAND} 2> /dev/null > /dev/null")
+
+    set(file_dep)
+    set(comment)
+    foreach(arg IN LISTS arg_list)
+        LIST(APPEND file_dep "${CMAKE_CURRENT_BINARY_DIR}/${arg}")
+        set(comment "${comment} ${arg}")
+    endforeach()
+
+    add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${output_filename}
+            COMMAND sh -c ${COMMAND}
+            DEPENDS ${file_dep}
+            COMMENT "Concatenating files${comment} to ${output_filename}"
+            VERBATIM
+    )
+
+    add_custom_target(concatenate_file_${output_filename} ALL
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${output_filename}
+            COMMENT "Concatenating files for target concatenate_file_${output_filename}"
     )
 endfunction()

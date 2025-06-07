@@ -77,7 +77,7 @@ _data_start:
 
 segment data align=16 vstart=0
 greet:
-    db "Program loading complete!", 0x0D, 0x0A, 0x00
+    db "                    LIMBO KERNEL LOADER VERSION 0.0.1", 0x0D, 0x0A, 0x00
 segment _data_tail align=16
 _data_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
