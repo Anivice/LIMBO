@@ -1,3 +1,5 @@
+; Boot sector, responsible for loading second stage program
+
 [bits 16]
 [org 0x7C00]
 
@@ -5,7 +7,7 @@ SYS_STARTINGPOINT equ 0x7C00
 
 jmp start
 
-print_msg: ;print_msg(ds:dp=null terminated msg)
+print_msg: ;print_msg(ds:bp=null terminated msg)
     pusha
     push            ds
     .print_hello:
@@ -24,7 +26,7 @@ print_msg: ;print_msg(ds:dp=null terminated msg)
     popa
     ret
 
-print_num: ;print_num(ax=num)
+print_num: ;print_num(ax=num,bx=base)
     pusha
     xor             cx,                     cx
     mov             bx,                     10
@@ -101,25 +103,29 @@ disk_error:
 .disk_err_msg_pt3:
     db ")", 0x0D, 0x0A, 0x00
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 start:
-    xor             cx,                     cx
-    mov             ds,                     cx
-
     ; print info
-    mov             bp,                     _message_mbr_loader
-    call            print_msg
+    xor             cx,                     cx                              ; clear cx
+    mov             ds,                     cx                              ; use zeroed out'd cx to clear ds, ds is used as ds:bp for print_msg
+    mov             bp,                     _message_mbr_loader             ; actual message
+    call            print_msg                                               ; print message
 
-    mov             ax,                     0x07C0
-    mov             es,                     ax
-    mov             di,                     _buffer - SYS_STARTINGPOINT
+    ; read_disk(al=sector_count,ah=starting_sector) ==> es:di
+    ; prepare buffer
+    mov             ax,                     _buffer                         ; buffer segment base linear
+    shr             ax,                     4                               ; convert it to segment address
+    mov             es,                     ax                              ; put it into es
+    xor             di,                     di                              ; clear out di
 
+    ; read one sector (2) only to check the header
     mov             ah,                     2                               ; second sector
     mov             al,                     1                               ; read one sector
     call            read_disk
 
     ; now, we determine how large the program is:
     mov             ax,                     [es:di]                         ; first value is the actual program size
+    add             ax,                     16                              ; add header size
     ; print info:
     mov             bp,                     _info_program_size
     call            print_msg
@@ -150,38 +156,39 @@ start:
     call            print_msg
 
     ; we have already read the whole program, now we need to reset our buffer offset
-    mov             di,                     _buffer - SYS_STARTINGPOINT
+    xor             di,                     di
 
     ; Now, we relocate the user program. The allocation is hardcoded for simplicity
     ; new_seg_addr = cur_seg + (cur_index + off_in_prog) >> 4
 
     ; set stack segmentation
+    ; get segment base
     mov word        ax,                     [es:di + 12]                    ; stack segmentation starting address
-    add             ax,                     di
-    shr             ax,                     4
-    add             ax,                     0x07C0
-    mov             cx,                     ax
-
+    add             ax,                     _buffer                         ; add segment with base segment
+    shr             ax,                     4                               ; convert linear to segment
+    mov             cx,                     ax                              ; put stack segment to cx
+    ; get segment size
     mov word        ax,                     [es:di + 12]                    ; stack segmentation starting address
     mov word        bx,                     [es:di + 14]                    ; stack segmentation end address
-    sub             bx,                     ax
-    ; stack protection procedure in case of an interruption
-    mov             ss,                     cx
-    mov             sp,                     bx
+    sub             bx,                     ax                              ; calculate stack size
+    ; set segment info
+    cli                                                                     ; disable interrupt
+    mov             ss,                     cx                              ; set stack segment
+    mov             sp,                     bx                              ; set stack size
+    sti                                                                     ; enable interrupt
 
     ; set up data segmentation
     mov word        ax,                     [es:di + 4]                     ; data segmentation starting address
-    add             ax,                     di
-    shr             ax,                     4
-    add             ax,                     0x07C0
-    mov             ds,                     ax
-    xor             si,                     si
+    add             ax,                     _buffer                         ; add segment with base segment
+    shr             ax,                     4                               ; convert linear to segment
+    mov             ds,                     ax                              ; set data segment
+    xor             si,                     si                              ; clear data segment pointer
 
     ; attempt to call _entry_point() with correct code segment (offset starts with 0x0000)
     mov             bx,                     [es:di + 2]                     ; get entry point offset
-    mov             ax,                     [es:di + 8]                     ; get code segmentation starting address
+    mov             ax,                     [es:di + 8]                     ; get code segment starting address
     add             ax,                     _buffer                         ; pending the current buffer segment
-    shr             ax,                     4                               ; they are all flat address, so we shift 4 bits to the right
+    shr             ax,                     4                               ; convert to segmentat
 
     ; Now we clear es to 0, so that we can access our own data section.
     ; with ds now point to the program's own data section, our default
@@ -199,14 +206,19 @@ start:
 
     call far        [es:_far_call]
 
-    ; The loaded program will return to here after it's done with it's designed job
-    ; thus, we have to halt the system in case that the processor wonders off
-_infinite_loop:
+    ; Loader should load kernel and boot, not return to MBR
+    xor             cx,                     cx
+    mov             ds,                     cx
+    mov             bp,                     _unexpected_return
+    call            print_msg
     hlt
-    jmp _infinite_loop
+    jmp             $
+
+_unexpected_return:
+    db "[ERROR]: Unexpected return from stage 2 loader!", 0x00
 
 _message_mbr_loader:
-    db "Stage 1 loader is now reading stage 2 loader...", 0x00
+    db "MBR loader is now reading stage 2 loader...", 0x00
 
 _info_program_size:
     db "size ", 0x00
