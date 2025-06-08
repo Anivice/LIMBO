@@ -91,3 +91,11 @@ function(concatenate_files)
             COMMENT "Concatenating files for target concatenate_file_${output_filename}"
     )
 endfunction()
+
+function(fill_space_with_empty_sectors FILE DESIRED)
+    add_custom_target(${FILE}_RESIZE ALL
+            COMMAND ${CMAKE_SOURCE_DIR}/scripts/fill_sec.sh ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${DESIRED}
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}
+            COMMENT "Resizing file ${FILE}"
+    )
+endfunction()

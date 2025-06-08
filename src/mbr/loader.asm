@@ -222,60 +222,61 @@ _entry_point: ; _entry_point()
 flush16:
     ; first, we need to get the flat address of our data segment inside loader
     ; first, we flat mode for data sectors
-    mov         eax,                    0x08    ; 1st, flat mode data segments
-    mov         ds,                     eax
-    mov         es,                     eax
+    mov             eax,                    0x08    ; 1st, flat mode data segments
+    mov             ds,                     eax
+    mov             es,                     eax
 
     ; we just use a temporary stack frame. stage 2 loader is responsible for setting up 32bit protected mode
     ; and load necessary data and environments to execute kernel code, this stack frame will be ditched anyway
-    mov         eax,                    0x20    ; 4th, temporary stack space
-    mov         ss,                     eax
-    mov         esp,                    0x1FF
+    mov             eax,                    0x20    ; 4th, temporary stack space
+    mov             ss,                     eax
+    mov             esp,                    0x1FF
 
     ; now, we convert the code segment, current temporary cs (#3), to flat mode
     ; so that eip is pointed to the actual physical address
     ; ebx -> data segment -> edi (flat)
     ; ecx -> code segment -> ecx (flat)
-    mov         edi,                    ebx
-    shl         edi,                    4
-    shl         ecx,                    4
-    add         ecx,                    flat_cs_mode
-    mov dword   [es:edi+flush16_ptr],   ecx
-    jmp far     [es:edi+flush16_ptr]
+    mov             edi,                    ebx
+    shl             edi,                    4
+    shl             ecx,                    4
+    add             ecx,                    flat_cs_mode
+    mov dword       [es:edi+flush16_ptr],   ecx
+    jmp far         [es:edi+flush16_ptr]
 
 flat_cs_mode:
-    mov         esi,                    edi
-    add         esi,                    greet32
-    call        puts
+    ; print notification
+    mov             esi,                    edi
+    add             esi,                    msg_done
+    mov             ebp,                    0x07
+    call            puts
 
-    mov byte    [es:0x0b8000],          'E'
-    mov byte    [es:0x0b8002],          'R'
-    mov byte    [es:0x0b8004],          'R'
-    mov byte    [es:0x0b8006],          'O'
-    mov byte    [es:0x0b8008],          'R'
-    mov byte    [es:0x0b800A],          ' '
-    jmp         $
+    ; print 32 bit protected mode loader greeting message
+    mov             esi,                    edi
+    add             esi,                    greet32
+    mov             ebp,                    0x71
+    call            puts
+    jmp             $
 
 putn: ; putn(eax=number)
     pusha
-    xor         ecx,                    ecx
-    mov         ebx,                    10
+    xor             ecx,                    ecx
+    mov             ebx,                    10
     .loop:
-        xor     edx,                    edx
-        div     ebx
-        cmp     eax,                    0
-        je      .exit
-        push    edx
-        inc     ecx
-        jmp     .loop
+        xor         edx,                    edx
+        div         ebx
+        cmp         eax,                    0
+        je          .exit
+        push        edx
+        inc         ecx
+        jmp         .loop
     .exit:
-    push        edx
-    inc         ecx
+    push            edx
+    inc             ecx
 
     .print:
-        pop     eax
-        add     eax,                    '0'
-        call    putc
+        pop         eax
+        add         eax,                    '0'
+        call        putc
     loop .print
 
     popa
@@ -283,10 +284,10 @@ putn: ; putn(eax=number)
 
 puts: ; puts(ds:esi=msg)
     pusha
-    xor             eax,            eax
+    xor             eax,                    eax
     .loop:
-        mov byte    al,             [ds:esi]
-        cmp         al,             0x00
+        mov byte    al,                     [ds:esi]
+        cmp         al,                     0x00
         je          .exit
         call        putc
         inc         esi
@@ -296,179 +297,170 @@ puts: ; puts(ds:esi=msg)
     ret
 
 get_cursor: ; get_cursor()->eax
-    xor         eax,        eax
-    push        edx
+    xor             eax,                    eax
+    push            edx
 
     ; now, point the GPU register index to the cursor register (higher 8 bit)
-    mov         dx,         GPU_REGISTER_INDEX
-    mov         al,         GPU_CURSOR_H8_BIT
-    out         dx,         al
+    mov             dx,                     GPU_REGISTER_INDEX
+    mov             al,                     GPU_CURSOR_H8_BIT
+    out             dx,                     al
 
     ; now, read from GPU register IO port, which is cursor register (higher 8 bit)
-    mov         dx,         GPU_INDEXED_REG_IO
-    in          al,         dx
+    mov             dx,                     GPU_INDEXED_REG_IO
+    in              al,                     dx
 
-    mov         ah,         al
+    mov             ah,                     al
 
     ; now, point the GPU register index to the cursor register (lower 8 bit)
-    mov         dx,         GPU_REGISTER_INDEX
-    mov         al,         GPU_CURSOR_L8_BIT
-    out         dx,         al
+    mov             dx,                     GPU_REGISTER_INDEX
+    mov             al,                     GPU_CURSOR_L8_BIT
+    out             dx,                     al
 
     ; now, read from GPU register IO port, which is cursor register (lower 8 bit)
-    mov         dx,         GPU_INDEXED_REG_IO
-    in          al,         dx
+    mov             dx,                     GPU_INDEXED_REG_IO
+    in              al,                     dx
 
-    pop         edx
+    pop             edx
     ret
 
 set_cursor: ; set_cursor(eax)
-    push        edx
-    push        ebx
+    push            edx
+    push            ebx
 
-    mov         ebx,        eax              ; save ax to bx
+    mov             ebx,                    eax                         ; save ax to bx
 
     ; now, point the GPU register index to the cursor register (higher 8 bit)
-    mov         dx,         GPU_REGISTER_INDEX
-    mov         al,         GPU_CURSOR_H8_BIT
-    out         dx,         al
+    mov             dx,                     GPU_REGISTER_INDEX
+    mov             al,                     GPU_CURSOR_H8_BIT
+    out             dx,                     al
 
     ; now, read from GPU register IO port, which is cursor register (higher 8 bit)
-    mov         dx,         GPU_INDEXED_REG_IO
-    mov         al,         bh
-    out         dx,         al
+    mov             dx,                     GPU_INDEXED_REG_IO
+    mov             al,                     bh
+    out             dx,                     al
 
     ; now, point the GPU register index to the cursor register (lower 8 bit)
-    mov         dx,         GPU_REGISTER_INDEX
-    mov         al,         GPU_CURSOR_L8_BIT
-    out         dx,         al
+    mov             dx,                     GPU_REGISTER_INDEX
+    mov             al,                     GPU_CURSOR_L8_BIT
+    out             dx,                     al
 
     ; now, read from GPU register IO port, which is cursor register (lower 8 bit)
-    mov         dx,         GPU_INDEXED_REG_IO
-    mov         al,         bl
-    out         dx,         al
+    mov             dx,                     GPU_INDEXED_REG_IO
+    mov             al,                     bl
+    out             dx,                     al
 
-    pop         ebx
-    pop         edx
+    pop             ebx
+    pop             edx
     ret
 
-putc:   ; putc(eax=character)
-    pusha                               ; preserve state
-    mov         ebx,         eax        ; save character to bl
-
-    ; get_cursor() -> eax
-    call        get_cursor
-
+putc:   ; putc(eax=character,[ebp=attr])
+    pusha
+    mov             ebx,                    eax                         ; save character to bl
+    call            get_cursor                                          ; get_cursor() -> eax
     ; check if we have reached the bottom of the screen
     ; when that happens, we first, need to move the content on the screen upwards one line (+80 characters)
     ; first instance: last line and attempt a newline (ax >= 1920)
     ; check if (ax >= 1920 AND bl == 0x0A) OR (ax == 1999)
-
-    ; First Condition: eax >= 1920
-    cmp         eax,        1920
-    jl          .check_second_condition ; If eax < 1920, skip to second condition
-
-    ; eax >= 1920, now check if ebx == 0x0A
-    cmp         ebx,        0x0A
-    jne         .check_second_condition ; If ebx != 0x0A, skip to second condition
-
-    ; Both conditions met: eax >= 1920 AND ebx == 0x0A
-    jmp         .start_of_scrolling     ; Jump to start scrolling
-
+    cmp             eax,                    1920                        ; First Condition: eax >= 1920
+    jl              .check_second_condition                             ; If eax < 1920, skip to second condition
+    cmp             ebx,                    0x0A                        ; eax >= 1920, now check if ebx == 0x0A
+    jne             .check_second_condition                             ; If ebx != 0x0A, skip to second condition
+    jmp             .start_of_scrolling                                 ; Both conditions met: eax >= 1920 AND ebx == 0x0A
+                                                                        ; Jump to start scrolling
     ; Second Condition: ax == 1999
     .check_second_condition:
-        cmp     eax,        1999
-        jne     .end_of_scrolling       ; If eax != 1999, jump to end_of_scrolling
+        cmp         eax,                    1999                        ; if eax == 1999
+        jne         .end_of_scrolling                                   ; If eax != 1999, jump to end_of_scrolling
 
     ; at here, condition met: eax == 1999
     .start_of_scrolling:
-        ; destination:
-        mov         edi,        0xB8000
 
-        ; source:
-        mov         esi,        0xB8000 + 80 * 2            ; start of the second line
-
-        ; { 2000 (all the character on screen) - 80 (first line) } * 2 == all the data on screen except for the first line
-        mov         ecx,        2000 - 80
-
-        cld
-        rep movsw
+        mov         edi,                    0xB8000                     ; destination
+        mov         esi,                    0xB8000 + 80 * 2            ; src: start of the second line
+        mov         ecx,                    2000 - 80                   ; { 2000 (all the character on screen) - 80 (first line) } * 2
+                                                                        ; == all the data on screen except for the first line
+        cld                                                             ; direction
+        rep movsw                                                       ; move
 
         ; now we need to clear all the characters at the bottom of the screen
-        mov         edi,        0xB8000 + 1920 * 2
-        mov         ecx,        80
+        mov         edi,                    0xB8000 + 1920 * 2          ; dest
+        mov         ecx,                    80                          ; count
 
         .clear_bottom:
-            mov byte    [es:edi],       ' '
-            inc         edi
-            mov byte    [es:edi],       0x07
-            inc         edi
-        loop        .clear_bottom
+            mov byte        [es:edi],       ' '
+            inc             edi
+            mov byte        [es:edi],       0x07
+            inc             edi
+        loop .clear_bottom
 
         ; reset cursor to the start of the last line
         ; if ebx != 0x0A, continue putc, else, we end putc (since we already handled 0x0A by scrolling)
-        cmp         ebx,        0x0A
-        je          .set_cursor_when_ebx_equals_to_0x0A
-
-        mov         eax,        1919            ; line start at the bottom of the screen
-        call        set_cursor                  ; set cursor
-        jmp         .end_of_scrolling           ; end scrolling handling, continue to put the character
-
-        ; move cursor to start at the bottom of the screen if ebx == 0x0A
-        ; and we end our putc, since this is basically print a newline
-        .set_cursor_when_ebx_equals_to_0x0A:
-            mov     eax,        1920            ; move cursor to start at the bottom of the screen
-            call    set_cursor                  ; set cursor
-            jmp     .end                        ; finish putc, since we basically did the whole thing
-
+        cmp         ebx,                    0x0A                        ; check if ebx is '\n'
+        je          .set_cursor_when_ebx_equals_to_0x0A                 ; print '\n'
+                                                                        ; if not
+        mov         eax,                    1919                        ; line end at second last line
+        call        set_cursor                                          ; set cursor
+        jmp         .end_of_scrolling                                   ; end scrolling handling, continue to put the character
+                                                                        ; move cursor to start at the bottom of the screen if ebx == 0x0A
+                                                                        ; and we end our putc, since this is basically print a newline
+        .set_cursor_when_ebx_equals_to_0x0A:                            ;
+            mov     eax,                    1920                        ; move cursor to start at the bottom of the screen
+            call    set_cursor                                          ; set cursor
+            jmp     .end                                                ; finish putc, since we basically did the whole thing
     .end_of_scrolling:
 
     ; newline handler:
-    cmp         ebx,            0x0A            ; if it's a newline marker
-    je          .set_cursor_to_newline          ; jump to putc.set_cursor_to_newline
+    cmp             ebx,                    0x0A                        ; if it's a newline marker
+    jne             .end_newline_filter_conditions                      ; not newline, skip conditions and proceed to normal print
+    push            eax                                                 ; save eax
+    push            ebx                                                 ; save ebx
+    xor             edx,                    edx                         ; clear edx
+    mov             ebx,                    80                          ; ebx is now the number of characters of one line
+    div             ebx                                                 ; eax % 80
+    pop             ebx                                                 ; recover ebx
+    pop             eax                                                 ; recover eax
+    cmp             edx,                    0                           ; check eax mod 80 == 0
+    jne             .set_cursor_to_newline                              ; not 0, then newline
+    jmp             .end                                                ; is 0, skip this print
 
-    ; reminder: ax is cursor linear location
+    .end_newline_filter_conditions:
     ; Normal print:
+    ; reminder: eax is cursor linear location, ebx is actual ASCII code
     ; show the character
-    ; multiply ax by 2 using cx, since the max value of the cursor is 1999, it will not overflow in 16bit register
-    ; meaning dx is not need to be considered
-    mov         ecx,        2
-    mul         ecx
-    mov         edi,        eax
-
-    mov byte    [es:0xB8000+edi],    bl
-    mov byte    [es:0xB8000+1+edi],  0x07
+    mov             edi,                    eax                         ; move offset to edi
+    shl             edi,                    1                           ; edi *= 2
+    mov byte        [es:0xB8000+edi],       bl                          ; move character to bl
+    mov             ebx,                    ebp                         ; get attribute
+    mov byte        [es:0xB8000+1+edi],     bl                          ; set attributes
 
     ; set cursor at the updated location
-    div         ecx
-    inc         eax
-    call        set_cursor
-    jmp         .end                        ; jump over the newline section
+    inc             eax                                                 ; move cursor to next location
+    call            set_cursor                                          ; set cursor
+    popa
+    ret
 
     ; print '\n'
     .set_cursor_to_newline:
         ; we called get_cursor()->ax before hand, linear address is already in ax
         ; now that we already know the input character is '\n', we can discard the content inside bx
-        mov         ebx,        80
-        xor         edx,        edx
+        mov         ebx,                    80
+        xor         edx,                    edx
 
         ; we do a division, the y will be inside ax and x will be inside dx
         div         ebx
 
         ; now, we only care about ax(y), since x is always 0 at a new line
-        inc         eax                      ; move to next line
+        inc         eax                                                 ; move to next line
 
         ; ax * 80 => ax, obtain the linear address
-        mov         ebx,        80
-        xor         edx,        edx
+        mov         ebx,                    80
+        xor         edx,                    edx
         mul         ebx
 
-        call        set_cursor              ; now, we set the new location for cursor
-        ; done.
-
+        call        set_cursor                                          ; now, we set the new location for cursor
     .end:
-    popa                                    ; restore
-    ret                                     ; return
+    popa
+    ret
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -495,12 +487,13 @@ _data_start:
 segment data align=16 vstart=0
 greet:
     db "[LIMBO LOADER]: Loader is now setting up 32bit Protected Mode.", 0x0D, 0x0A, 0x00
+msg_done:
 
+    db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A, 0x00
 greet32:
-    db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A
-    db "================================================================================"
-    db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1", 0x0A
-    db "================================================================================", 0x00
+    db "================================================================================", 0x0A
+    db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1         ", 0x0A
+    db "================================================================================", 0x0A, 0x00
 
 align 16, db 0
 gdt:
