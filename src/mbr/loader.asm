@@ -104,7 +104,7 @@ _entry_point: ; _entry_point()
     add         ax,                     bx              ; adds ds to ax, so ax is now the actual segment address
     mov         es,                     ax              ; move the actual segment address to %es
 
-    ; #1: NULL
+    ; #0: NULL
     mov dword   es:[0x00],              0x00000000
     mov dword   es:[0x04],              0x00000000
 
@@ -141,40 +141,39 @@ _entry_point: ; _entry_point()
     mov         dx,                     es
     mov         fs,                     dx
 
+    ; Flat Mode:
     ; #1, data segment
     xor         eax,                    eax             ; baseline: 0x00
-    mov         ebx,                    0xFFFFF         ; limit: 0xFFFFF (4G)
-    mov         ecx,                    0xC92           ; Attribute: 4KB, 32Bit, Segment Present, DPL=0, d-w-
+    mov         ebx,                    0xFFFFF         ; limit: 4G
+    mov         ecx,                    0xC92           ; Attribute: 1100 1001 0010
     mov         si,                     8               ; descriptor is at fs:8
-    call        set_descriptor                          ; == 0x0000ffff00cf9200
+    call        set_descriptor
 
     ; #2, code segment
+    xor         eax,                    eax             ; baseline: 0x00
+    mov         ebx,                    0xFFFFF         ; limit: 4G
+    mov         ecx,                    0xC9A           ; attr: 1100 1001 1010
+    mov         si,                     16              ; descriptor is at fs:16
+    call        set_descriptor
+
+    ; #3, current code segment
     xor         eax,                    eax
     mov         ax,                     cs              ; baseline: current segment
     shl         eax,                    4               ; shift left 4 bits
     mov         ebx,                    0xFFFF          ; limit: 64KB
     mov         ecx,                    0x498           ; attr: 0100 1001 1000 : 32bit, Segment Present, DPL=0, x---
-    mov         si,                     16              ; descriptor is at fs:16
+    mov         si,                     24              ; descriptor is at fs:24
     call        set_descriptor
 
-    ; #3, stack segment
-    xor         eax,                    eax
-    mov         ax,                     ss                          ; baseline: current segment
-    shl         eax,                    4
-    mov         ebx,                    _stack_end - _stack_start   ; limit
-    mov         ecx,                    0x496                       ; attr: 0100 1001 0110
-    mov         si,                     24
-    call        set_descriptor
-
-    ; #4, VGA Video Memory
-    mov         eax,                    0x0b8000        ; baseline: current segment
-    mov         ebx,                    0xFFFF            ; 2000 characters, 4000 bytes
-    mov         ecx,                    0xC92           ; attr: 0100 1001 0010
-    mov         si,                     32
+    ; #4, stack segment
+    xor         eax,                    eax             ; baseline: 0x00
+    mov         ebx,                    0xFFFFF         ; limit: 4G
+    mov         ecx,                    0xC96           ; attr: 1100 1001 0110
+    mov         si,                     32              ; descriptor is at fs:24
     call        set_descriptor
 
     ; GDT descriptor:
-    mov word    [gdt_boundary],         39              ; table boundary
+    mov word    [gdt_boundary],         5 * 8 - 1       ; table boundary for 5 entries
     xor         eax,                    eax
     mov         ax,                     fs              ; table base
     shl         eax,                    4               ; convert to linear address
@@ -195,14 +194,14 @@ _entry_point: ; _entry_point()
     mov         cr0,                    eax
 
     ; Enter 32bit Protected Mode:
-    jmp dword 0x0010:flush16              ; use jmp to force clear CPU cache generated in 16bit mode
-flush16:
-    [bits 32]
-    mov         eax,                    0x20            ; 4th selector, video memory
-    mov         es,                     ax              ; load video memory segment
-    mov         edi,                    0               ; upper-left corner
+    jmp  dword  0x0018:flush16      ; use jmp to force clear CPU cache generated in 16bit mode
 
-    mov byte    [es:0x00000],           '#'
+    [bits 32]
+flush16:
+    mov         eax,                    0x08
+    mov         es,                     ax
+
+    mov byte    [es:0x0b8000],          '#'
     jmp         $
 
     [bits 16]
@@ -237,6 +236,10 @@ gdt_boundary:
     dw 0
 gdt_base:
     dd 0
+
+pm_ptr:         ; m16:32 structure
+    dd  0       ; actual address
+    dw  0x10    ; code segment selector in flat mode
 
 segment _data_tail align=16
 _data_end:
