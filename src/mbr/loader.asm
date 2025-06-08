@@ -101,7 +101,6 @@ _entry_point: ; _entry_point()
     mov         si,                     greet
     call        print
 
-
     ; load GDT location to %eax
     mov         ax,                     gdt             ; move GDT segment offset to ax
     shr         ax,                     4               ; >> 4, so ax is now segment address
@@ -245,10 +244,8 @@ flush16:
 
 flat_cs_mode:
     ; print notification
-    mov             esi,                    edi
-    add             esi,                    msg_done
-    mov             ebp,                    0x07
-    call            puts
+    mov             eax,                    msg_done
+    call            dsprint
 
     ; print 32 bit protected mode loader greeting message
     mov             esi,                    edi
@@ -256,11 +253,57 @@ flat_cs_mode:
     mov             ebp,                    0x71
     call            puts
 
+    ; setup dummy IDT
+    mov             eax,                    initialize_interrupt
+    call            dsprint
+
+    mov             eax,                    idt_start
+    add             eax,                    edi
+    mov             [es:edi+idt_descriptor_idt_start], eax
+    lidt            [es:edi+idt_descriptor]
+
+    mov             ecx,                    256
+    mov             ebp,                    idt_start
+    add             ebp,                    edi
+    .fill_idt:
+        mov word    [es:ebp    ],           (iret_stub-$$) & 0xFFFF
+        mov word    [es:ebp + 2],           0x18                        ; loader segment
+        mov byte    [es:ebp + 4],           0                           ; reserved
+        mov byte    [es:ebp + 5],           0x8E                        ; P=1,DPL=0,Type=14 (32-bit interrupt gate)
+        mov word    [es:ebp + 6],           ((iret_stub-$$) >> 16) & 0xFFFF
+        add         ebp,                    8
+    loop .fill_idt
+    sti
+
+    call            print_done
     ; now we load the actual kernel.
     ; kernel is a C non-PIE program mapped itself to 1MB-2MB
     ; with first 640KB being the code section, and higher 384KB being the data section
+    mov             eax,                    prepare_to_read_kernel
+    call            dsprint
 
     jmp             $
+
+iret_stub:
+    iret
+
+dsprint: ;(msg=eax)
+    pusha
+    mov             esi,                    edi
+    add             esi,                    eax
+    mov             ebp,                    0x07
+    call            puts
+    popa
+    ret
+
+print_done:
+    pusha
+    mov             esi,                    edi
+    add             esi,                    done
+    mov             ebp,                    0x07
+    call            puts
+    popa
+    ret
 
 putn: ; putn(eax=number)
     pusha
@@ -492,29 +535,44 @@ _data_start:
 segment data align=16 vstart=0
 greet:
     db "[LIMBO LOADER]: Loader is now setting up 32bit Protected Mode.", 0x0D, 0x0A, 0x00
-msg_done:
 
+msg_done:
     db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A, 0x00
+
 greet32:
     db "================================================================================", 0x0A
     db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1         ", 0x0A
     db "================================================================================", 0x0A, 0x00
 
-align 16, db 0
-gdt:
-resb 64
+initialize_interrupt:
+        db "[LIMBO LOADER]: Initializing dummy interrupt request handler...", 0x00
 
-gdt_boundary:
-    dw 0
-gdt_base:
-    dd 0
+prepare_to_read_kernel:
+        db "[LIMBO LOADER]: Preparing to read kernel data from floppy disk A...", 0x00
+
+done:   db "done.", 0x0A, 0x00
+
+align 16, db 0
+gdt: resb 64
+
+gdt_boundary: dw 0
+gdt_base: dd 0
 
 flush16_ptr:
     dd 0        ; 32-bit offset
     dw 0x10     ; selector, 2nd one
 
-stack_temp:
-    resb 0x1FF
+stack_temp: resb 0x1FF
+
+align 8
+idt_start:
+    times 256 dq 0       ; 256 entries × 8 bytes
+idt_end:
+
+idt_descriptor:
+    dw idt_end - idt_start - 1  ; limit = size-1
+idt_descriptor_idt_start:
+    dd 0                ; base = linear address of table
 
 segment _data_tail align=16
 _data_end:
