@@ -99,3 +99,11 @@ function(fill_space_with_empty_sectors FILE DESIRED)
             COMMENT "Resizing file ${FILE}"
     )
 endfunction()
+
+function(form_1MB_kernel FILE OFILE DEP)
+    add_custom_target(FormKernel ALL
+            COMMAND ${CMAKE_SOURCE_DIR}/scripts/kcopy.sh ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${CMAKE_CURRENT_BINARY_DIR}/${OFILE}
+            DEPENDS ${DEP}
+            COMMENT "Dumping kernel code to 1MB image ${OFILE}"
+    )
+endfunction()

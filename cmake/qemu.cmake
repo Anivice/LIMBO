@@ -33,5 +33,6 @@ function(add_emulation_target NAME FLOPPY_DRIVE_FILE)
                 -D qemu_${NAME}_debug.log
             COMMENT "Booting from floppy disk ${FLOPPY_DRIVE_FILE}..."
             DEPENDS ${HARD_DISK_FILE} ${CMAKE_BINARY_DIR}/${FLOPPY_DRIVE_FILE}
+            USES_TERMINAL
     )
 endfunction()

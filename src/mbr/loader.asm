@@ -255,6 +255,11 @@ flat_cs_mode:
     add             esi,                    greet32
     mov             ebp,                    0x71
     call            puts
+
+    ; now we load the actual kernel.
+    ; kernel is a C non-PIE program mapped itself to 1MB-2MB
+    ; with first 640KB being the code section, and higher 384KB being the data section
+
     jmp             $
 
 putn: ; putn(eax=number)
