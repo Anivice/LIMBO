@@ -494,11 +494,13 @@ segment _data_head align=16
 _data_start:
 segment data align=16 vstart=0
 greet:
-    db "                    LIMBO KERNEL LOADER VERSION 0.0.1", 0x0D, 0x0A
     db "[LIMBO LOADER]: Loader is now setting up 32bit Protected Mode.", 0x0D, 0x0A, 0x00
 
 greet32:
-    db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A, 0x00
+    db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A
+    db "================================================================================"
+    db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1", 0x0A
+    db "================================================================================", 0x00
 
 align 16, db 0
 gdt:
