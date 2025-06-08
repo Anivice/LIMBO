@@ -281,7 +281,6 @@ flat_cs_mode:
     ; with first 640KB being the code section, and higher 384KB being the data section
     mov             eax,                    prepare_to_read_kernel
     call            dsprint
-
     jmp             $
 
 iret_stub:
@@ -552,6 +551,8 @@ prepare_to_read_kernel:
 
 done:   db "done.", 0x0A, 0x00
 
+fda_failed_msg: db "Floppy disk reading failed, error code=", 0x00
+
 align 16, db 0
 gdt: resb 64
 
@@ -573,6 +574,8 @@ idt_descriptor:
     dw idt_end - idt_start - 1  ; limit = size-1
 idt_descriptor_idt_start:
     dd 0                ; base = linear address of table
+
+fd_cache: resb 32
 
 segment _data_tail align=16
 _data_end:

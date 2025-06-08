@@ -92,11 +92,12 @@ function(concatenate_files)
     )
 endfunction()
 
-function(fill_space_with_empty_sectors FILE DESIRED)
+function(fill_space_with_empty_sectors FILE OFILE DESIRED)
     add_custom_target(${FILE}_RESIZE ALL
-            COMMAND ${CMAKE_SOURCE_DIR}/scripts/fill_sec.sh ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${DESIRED}
+            COMMAND ${CMAKE_SOURCE_DIR}/scripts/fill_sec.sh ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${CMAKE_CURRENT_BINARY_DIR}/${OFILE} ${DESIRED}
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}
             COMMENT "Resizing file ${FILE}"
+            BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${OFILE}
     )
 endfunction()
 
@@ -104,6 +105,7 @@ function(form_1MB_kernel FILE OFILE DEP)
     add_custom_target(FormKernel ALL
             COMMAND ${CMAKE_SOURCE_DIR}/scripts/kcopy.sh ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${CMAKE_CURRENT_BINARY_DIR}/${OFILE}
             DEPENDS ${DEP}
-            COMMENT "Dumping kernel code to 1MB image ${OFILE}"
+            COMMENT "Dumping kernel code to image ${OFILE}"
+            BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${OFILE}
     )
 endfunction()

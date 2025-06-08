@@ -1,4 +1,4 @@
-; Boot sector, responsible for loading second stage program (max 64KB)
+; Boot sector, responsible for loading second stage program (max 17 sectors)
 
 [bits 16]
 [org 0x7C00]
@@ -52,10 +52,9 @@ print_num: ;print_num(ax=num,bx=base)
     popa
     ret
 
-read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di
+read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di note: this code supports only 17 sectors at most
     pusha
     mov             bx,                     ax      ; save ax parameter to bx
-    push            bx
     mov             ah,                     0x00    ; INT 13h, function 00h = reset
     mov             dl,                     0x00    ; drive 0 = A:
     int             0x13                            ; ignore errors for now
@@ -73,35 +72,17 @@ read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di
 
     jc              disk_error
 
-    pop             bx
     popa
     ret
 
 disk_error:
-    pop             bx
     xor             cx,                     cx
     mov             ds,                     cx
     mov             bp,                     .disk_error_msg
-    call            print_msg
-    mov             ax,                     bx
-    and             ax,                     0x00FF
-    call            print_num
-    mov             bp,                     .disk_err_msg_pt2
-    call            print_msg
-    and             ax,                     bx
-    and             ax,                     0xFF00
-    call            print_num
-    mov             bp,                     .disk_err_msg_pt3
-    call            print_msg
     hlt
     jmp $
 
-.disk_error_msg:
-    db "[MBR FDA]: Floopy disk read error (sec:", 0x00
-.disk_err_msg_pt2:
-    db ", cnt:", 0x00
-.disk_err_msg_pt3:
-    db ")", 0x0D, 0x0A, 0x00
+.disk_error_msg: db "[MBR FDA]: Floopy disk read error", 0x00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 start:
@@ -147,6 +128,19 @@ start:
     add             di,                     512
     dec             al
     mov             ah,                     3                               ; read starting from the third sector
+
+    ; we don't proceed if loader is larger than 17 sectors
+    cmp             al,                     16
+    jle             .continue
+
+    xor             cx,                     cx
+    mov             ds,                     cx
+    mov             bp,                     _too_large
+    call            print_msg
+
+    .@@1: hlt
+    jmp .@@1
+    .continue:
     cmp             al,                     0                               ; compare number of the pending sector to read to 0
     je              .end_read                                               ; we have no sector to read, skip (program size < 512 B)
     call            read_disk                                               ; if we still have sectors to read, continuing on
@@ -188,7 +182,7 @@ start:
     mov             bx,                     [es:di + 2]                     ; get entry point offset
     mov             ax,                     [es:di + 8]                     ; get code segment starting address
     add             ax,                     _buffer                         ; pending the current buffer segment
-    shr             ax,                     4                               ; convert to segmentat
+    shr             ax,                     4                               ; convert to segment
 
     ; Now we clear es to 0, so that we can access our own data section.
     ; with ds now point to the program's own data section, our default
@@ -207,18 +201,13 @@ start:
     call far        [es:_far_call]
 
     ; Loader should load kernel and boot, not return to MBR
-    xor             cx,                     cx
-    mov             ds,                     cx
-    mov             bp,                     _unexpected_return
-    call            print_msg
-
     cli
 halt_system:
     hlt
     jmp             halt_system
 
-_unexpected_return:
-    db "[MBR ERROR]: Unexpected return from loader!", 0x0D, 0x0A, 0x00
+_too_large:
+    db 0x0D, 0x0A, "[MBR ERROR]: Loader too long, max 17 sectors!", 0x0D, 0x0A, 0x00
 
 _message_mbr_loader:
     db "[MBR INFO]: MBR loader is now reading stage 2 loader...", 0x00
