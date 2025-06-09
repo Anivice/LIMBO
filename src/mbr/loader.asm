@@ -190,10 +190,10 @@ _entry_point: ; _entry_point()
     mov         si,                     greet
     call        print
 
-    mov ah, 0x01     ; INT10h, AH=01h → set cursor shape
-    mov ch, 0x20     ; start scanline = 32 (beyond 0–15)
-    mov cl, 0x00     ; end scanline   =   0
-    int  0x10        ; cursor disabled
+    mov         ah,                     0x01            ; INT10h, AH=01h -> set cursor shape
+    mov         ch,                     0x20            ; start scanline = 32 (beyond 0–15)
+    mov         cl,                     0x00            ; end scanline   =   0
+    int         0x10                                    ; cursor disabled
 
 
     mov         ax,                     0x9E0
@@ -211,13 +211,6 @@ _entry_point: ; _entry_point()
         call    print_num
         mov     si,                     fda_msg2
         call    print
-        push    ax
-        mov     ax,                     1199+18
-        xor     bx,                     bx
-        call    print_num
-        pop     ax
-        mov     si,                     fda_endl
-        call    print
 
         inc     ax
 
@@ -229,10 +222,10 @@ _entry_point: ; _entry_point()
         jmp     .loop
     .end_loop:
 
-    mov   ah, 0x01      ; BIOS → set cursor shape
-    mov   ch, 0x00      ; start scanline = 0
-    mov   cl, 0x0F      ; end   scanline = 15
-    int   0x10
+    mov         ah,                     0x01            ; BIOS -> set cursor shape
+    mov         ch,                     0x00            ; start scanline = 0
+    mov         cl,                     0x0F            ; end   scanline = 15
+    int         0x10
 
     mov         si,                     fda_nl
     call        print
@@ -703,8 +696,7 @@ greet:
     db "[LIMBO LOADER]: Loader is now reading 32bit kernel...", 0x0D, 0x0A, 0x00
 
 fda_msg: db "[LIMBO LOADER FDA]: Reading sector ", 0x00
-fda_msg2: db " / ", 0x00
-fda_endl: db "  ", 0x0D, 0x00
+fda_msg2: db " / 1217", 0x0D, 0x00
 fda_nl:  db 0x0D,0x0A, 0x00
 
 floppy_disk_err:
