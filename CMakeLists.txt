@@ -13,7 +13,12 @@ add_compile_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfile
 add_link_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
         -fno-PIE -fno-PIC -no-pie -Wl,-no-pie)
 
-add_library(limbo SHARED src/entry.c)
+include_directories(src/include)
+add_library(limbo SHARED src/entry.c
+        src/gpu.c           src/include/gpu.h
+        src/io.c            src/include/io.h
+        src/printk.c src/include/printk.h
+)
 
 form_1MB_kernel(liblimbo.so limbo.bin limbo)
 concatenate_files(boot.bin head.resized.bin limbo.bin)
