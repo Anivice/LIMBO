@@ -313,11 +313,18 @@ _entry_point: ; _entry_point()
     add         ax,                     stack_temp
     mov         ebx,                    0x1FF           ; limit: 0x1FF
     mov         ecx,                    0x496           ; attr: 0100 1001 0110
-    mov         si,                     32              ; descriptor is at fs:24
+    mov         si,                     32              ; descriptor is at fs:32
+    call        set_descriptor
+
+    ; #5, stack segment
+    xor         eax,                    eax             ; baseline
+    mov         ebx,                    0xFFFFF         ; limit: 4GB
+    mov         ecx,                    0xC96           ; attr: 1100 1001 0110
+    mov         si,                     40              ; descriptor is at fs:40
     call        set_descriptor
 
     ; GDT descriptor:
-    mov word    [gdt_boundary],         5 * 8 - 1       ; table boundary for 5 entries
+    mov word    [gdt_boundary],         6 * 8 - 1       ; table boundary for 5 entries
     xor         eax,                    eax
     mov         ax,                     fs              ; table base
     shl         eax,                    4               ; convert to linear address
@@ -361,6 +368,8 @@ flush16:
     mov             eax,                    0x08    ; 1st, flat mode data segments
     mov             ds,                     eax
     mov             es,                     eax
+    mov             fs,                     eax
+    mov             gs,                     eax
 
     ; we just use a temporary stack frame. stage 2 loader is responsible for setting up 32bit protected mode
     ; and load necessary data and environments to execute kernel code, this stack frame will be ditched anyway
@@ -423,7 +432,23 @@ flat_cs_mode:
     mov             edi,                    1024*1024
     cld
     rep movsb
-    jmp dword       0x0010:0x100000
+
+    ; setup stack space
+    mov             eax,                    0x28
+    mov             ss,                     eax
+    mov             esp,                    0x9FBFF     ; previously 640KB kernel cache
+    xor             eax,                    eax
+    xor             ebx,                    ebx
+    xor             ecx,                    ecx
+    xor             edx,                    edx
+    xor             ebp,                    ebp
+    xor             esi,                    esi
+    xor             edi,                    edi
+    call dword      0x0010:0x100000
+
+    cli
+    .@@1: hlt
+    jmp             .@@1
 
 iret_stub:
     iret

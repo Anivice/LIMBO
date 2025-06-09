@@ -1,15 +1,12 @@
-int fd = 0x114514;
-char buffer[256];
-
+[[noreturn]]
 int main(void)
 {
     const char * msg = "Hello World!";
-    for (unsigned int i = 0; true; i++)
-    {
-        if (msg[i] == '\0') {
-            break;
-        }
-
-        fd += msg[i];
+    unsigned int i = 0;
+    unsigned int j = 0;
+    while (msg[i]) {
+        j += msg[i++];
     }
+
+    while (true);
 }
