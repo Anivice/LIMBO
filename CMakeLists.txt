@@ -18,9 +18,9 @@ add_library(limbo SHARED src/entry.c)
 form_1MB_kernel(liblimbo.so limbo.bin limbo)
 concatenate_files(boot.bin head.resized.bin limbo.bin)
 add_dependencies(concatenate_file_boot.bin head.bin_RESIZE) # file merge needs head to be resized first
-fill_space_with_empty_sectors(boot.bin boot.resized.bin 2880) # 1.44MB floppy disk
+fill_space_with_empty_sectors(boot.bin boot.img 2880) # 1.44MB floppy disk
 
 include(cmake/qemu.cmake)
-add_emulation_target(boot boot.resized.bin dummy)
+add_emulation_target(boot boot.img dummy)
 add_dependencies(boot FormKernel)
 add_dependencies(boot_debug FormKernel)
