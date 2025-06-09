@@ -444,7 +444,7 @@ flat_cs_mode:
     xor             ebp,                    ebp
     xor             esi,                    esi
     xor             edi,                    edi
-    call dword      0x0010:0x100000
+    jmp dword       0x0010:0x100000
 
     cli
     .@@1: hlt
