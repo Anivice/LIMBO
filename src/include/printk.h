@@ -1,8 +1,12 @@
 #ifndef PRINTK_H
 #define PRINTK_H
 
+/*!
+ * @brief C-style printf-like message printer
+ * @param fmt Print format
+ * @param ... Attachments
+ * @returns NOTHING
+ */
 void printk(const char * fmt, ...);
-void putc(char c, unsigned char attr);
-void print_num(unsigned int num, unsigned char attr, bool base16);
 
 #endif //PRINTK_H

@@ -231,12 +231,6 @@ void puts(const char *str, const unsigned char attr)
     }
 }
 
-/*!
- * @brief C-style printf-like message printer
- * @param fmt Print format
- * @param ... Attachments
- * @returns NOTHING
- */
 void printk(const char * fmt, ...)
 {
     __builtin_va_list ap;
