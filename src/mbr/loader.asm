@@ -1,3 +1,29 @@
+; loader.asm
+;
+; Copyright 2025 Anivice Ives
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;
+; SPDX-License-Identifier: GPL-3.0-or-later
+;
+; @file loader.asm
+; @brief Second stage loader (max 17 sectors), responsible for loading kernel and enter protected mode
+; @brief First we read kernel data from floppy disk sector #19 (or LBA-sense 18) to 1218 (or LBA-sense 1217)
+; @brief to memory 0x9E00-0x9FBFF in real mode, then setup protected mode, convert everything to flat mode,
+; @brief discarding segments, and move kernel data (non-PIE code) from 0x9E00 to 0x100000 (beyond 1MB)
+; @brief and finally, jump to 0x100000
+
 GPU_REGISTER_INDEX      equ 0x3d4
 GPU_CURSOR_H8_BIT       equ 0x0e
 GPU_CURSOR_L8_BIT       equ 0x0f
@@ -693,20 +719,14 @@ fda_nl:  db 0x0D,0x0A, 0x00
 floppy_disk_err:
     db 0x0D, 0x0A, "[LIMBO LOADER FDA]: Read floppy disk A failed, AH=", 0x0D, 0x0A, 0x00
 
-msg_done:
-    db "[LIMBO LOADER]: 32bit Protected Mode is now active.", 0x0A, 0x00
-
 greet32:
     db "================================================================================", 0x0A
     db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1         ", 0x0A
     db "================================================================================", 0x0A, 0x00
 
-initialize_interrupt:
-        db "[LIMBO LOADER]: Initializing dummy interrupt request handler...", 0x00
-
-prepare_to_move_kernel:
-        db "[LIMBO LOADER]: Move kernel data from 0x9E00-0x9FBFF to 0x100000-0x195DFF...", 0x0A, 0x00
-
+msg_done: db "[LIMBO LOADER]: 32bit Protected Mode is now active.", 0x0A, 0x00
+initialize_interrupt: db "[LIMBO LOADER]: Initializing dummy interrupt request handler...", 0x00
+prepare_to_move_kernel: db "[LIMBO LOADER]: Move kernel data from 0x9E00-0x9FBFF to 0x100000-0x195DFF...", 0x0A, 0x00
 done:   db "done.", 0x0A, 0x00
 
 align 16, db 0

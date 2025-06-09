@@ -1,6 +1,5 @@
 #include "gpu.h"
-
-#include <io.h>
+#include "io.h"
 
 #define GPU_REGISTER_INDEX (0x3d4)
 #define GPU_CURSOR_H8_BIT  (0x0e)
@@ -44,5 +43,3 @@ void set_cursor_loc(unsigned short loc)
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_L8_BIT);
     out8(GPU_INDEXED_REG_IO, (unsigned char)loc);
 }
-
-// void printk(const char *format, ...);

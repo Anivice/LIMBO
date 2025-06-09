@@ -5,6 +5,7 @@ __asm__("jmp main");
 [[noreturn]]
 int main()
 {
-    printk("LIMBO kernel version %s, process starting...\n", LIMBO_VERSION);
+    printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
+    printk("%d", -1234);
     while (true);
 }
