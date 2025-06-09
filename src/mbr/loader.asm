@@ -703,7 +703,7 @@ floppy_disk_err:
     db 0x0D, 0x0A, "[LIMBO LOADER FDA]: Read floppy disk A failed, AH=", 0x0D, 0x0A, 0x00
 
 msg_done:
-    db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A, 0x00
+    db "[LIMBO LOADER]: 32bit Protected Mode is now active.", 0x0A, 0x00
 
 greet32:
     db "================================================================================", 0x0A
