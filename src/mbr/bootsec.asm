@@ -26,7 +26,7 @@ print_msg: ;print_msg(ds:bp=null terminated msg)
     popa
     ret
 
-print_num: ;print_num(ax=num,bx=base)
+print_num: ;print_num(ax=num)
     pusha
     xor             cx,                     cx
     mov             bx,                     10
@@ -70,17 +70,19 @@ read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di note: this
     mov             bx,                     di
     int             0x13
 
-    jc              disk_error
+    jc              .disk_error
 
     popa
     ret
 
-disk_error:
+.disk_error:
     xor             cx,                     cx
     mov             ds,                     cx
     mov             bp,                     .disk_error_msg
+    call            print_msg
+    cli
     hlt
-    jmp $
+    jmp             $
 
 .disk_error_msg: db "[MBR FDA]: Floopy disk read error", 0x00
 

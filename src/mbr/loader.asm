@@ -52,6 +52,41 @@ print: ;print_msg(si=null terminated msg)
     popa
     ret
 
+print_num: ;print_num(ax=num,bx=is_base16?, 0 is base 10 else base 16)
+    pusha
+    xor             cx,                     cx
+    cmp             bx,                     0
+    je              .base10
+    mov             bx,                     16
+    jmp             .loop
+    .base10:
+    mov             bx,                     10
+    .loop:
+        xor         dx,                     dx
+        div         bx
+        cmp         ax,                     0
+        je          .exit
+        push        dx
+        inc         cx
+        jmp         .loop
+    .exit:
+    push            dx
+    inc             cx
+
+    .print:
+        pop         ax
+        mov         ah,                     0x0E
+        add         al,                     '0'
+        cmp         al,                     '9'+1
+        jl          .skip
+        add         al,                     7
+        .skip:
+        int         0x10
+    loop .print
+
+    popa
+    ret
+
 set_descriptor: ; set_descriptor(%eax=baseline,%ebx=boundary,%ecx=attribute, %fs:%si=target)
     push        eax
     push        ebx
@@ -91,6 +126,60 @@ set_descriptor: ; set_descriptor(%eax=baseline,%ebx=boundary,%ecx=attribute, %fs
     pop         eax
     ret
 
+read_one_sector: ; read_disk(ch=C, dh=H, cl=S)
+    pusha
+    mov             ah,                     0x00    ; INT 13h, function 00h = reset
+    mov             dl,                     0x00    ; drive 0 = A:
+    int             0x13                            ; ignore errors for now
+    popa
+    pusha
+
+    mov             ah,                     0x02    ; function 02h = read sectors
+    mov             al,                     1       ; AL = how many 512-byte sectors
+;    mov             ch,                     0x00    ; CH = cylinder 0
+;    mov             cl,                     1      ; CL = sector 1
+;    mov             dh,                     0x00    ; DH = head 0
+    mov             dl,                     0x00    ; DL = drive 0 (A:)
+
+    ; buffer: es:bx
+    mov             bx,                     di
+    int             0x13
+
+    jc              .disk_error
+
+    popa
+    ret
+
+.disk_error:
+    cli
+    mov         si,                     floppy_disk_err
+    call        print
+    xor         al,                     al
+    shr         ax,                     8
+    call        print_num
+    hlt
+    jmp         $
+
+lba_to_chs: ; (ax=lba)->(ch=C, dh=H, cl=S)
+    push    ax
+    push    bx
+    mov     bx,     18
+    xor     dx,     dx
+    div     bx
+    inc     dx
+    mov     cl,     dl
+    xor     dx,     dx
+    mov     bx,     2
+    div     bx
+    ; H->dl
+    ; C->al
+    mov     ch,     al
+    mov     dh,     dl
+    pop     bx
+    pop     ax
+    ret
+
+; 18 + 32 cylinders + 11 sectors
 _entry_point: ; _entry_point()
     pusha
     push        es
@@ -101,6 +190,54 @@ _entry_point: ; _entry_point()
     mov         si,                     greet
     call        print
 
+    mov ah, 0x01     ; INT10h, AH=01h → set cursor shape
+    mov ch, 0x20     ; start scanline = 32 (beyond 0–15)
+    mov cl, 0x00     ; end scanline   =   0
+    int  0x10        ; cursor disabled
+
+
+    mov         ax,                     0x9E0
+    mov         es,                     ax
+    xor         bx,                     bx
+    mov         ax,                     18
+    .loop:
+        xor     di,                     di
+        call    lba_to_chs
+        call    read_one_sector
+
+        mov     si,                     fda_msg
+        call    print
+        xor     bx,                     bx
+        call    print_num
+        mov     si,                     fda_msg2
+        call    print
+        push    ax
+        mov     ax,                     1199+18
+        xor     bx,                     bx
+        call    print_num
+        pop     ax
+        mov     si,                     fda_endl
+        call    print
+
+        inc     ax
+
+        cmp     ax,                     1199+18
+        jg      .end_loop
+        mov     bx,                     es
+        add     bx,                     512/16
+        mov     es,                     bx
+        jmp     .loop
+    .end_loop:
+
+    mov   ah, 0x01      ; BIOS → set cursor shape
+    mov   ch, 0x00      ; start scanline = 0
+    mov   cl, 0x0F      ; end   scanline = 15
+    int   0x10
+
+    mov         si,                     fda_nl
+    call        print
+
+    cli
     ; load GDT location to %eax
     mov         ax,                     gdt             ; move GDT segment offset to ax
     shr         ax,                     4               ; >> 4, so ax is now segment address
@@ -279,9 +416,14 @@ flat_cs_mode:
     ; now we load the actual kernel.
     ; kernel is a C non-PIE program mapped itself to 1MB-2MB
     ; with first 640KB being the code section, and higher 384KB being the data section
-    mov             eax,                    prepare_to_read_kernel
+    mov             eax,                    prepare_to_move_kernel
     call            dsprint
-    jmp             $
+    mov             ecx,                    654335-40448+1
+    mov             esi,                    0x9E00
+    mov             edi,                    1024*1024
+    cld
+    rep movsb
+    jmp dword       0x0010:0x100000
 
 iret_stub:
     iret
@@ -533,7 +675,15 @@ segment _data_head align=16
 _data_start:
 segment data align=16 vstart=0
 greet:
-    db "[LIMBO LOADER]: Loader is now setting up 32bit Protected Mode.", 0x0D, 0x0A, 0x00
+    db "[LIMBO LOADER]: Loader is now reading 32bit kernel...", 0x0D, 0x0A, 0x00
+
+fda_msg: db "[LIMBO LOADER FDA]: Reading sector ", 0x00
+fda_msg2: db " / ", 0x00
+fda_endl: db "  ", 0x0D, 0x00
+fda_nl:  db 0x0D,0x0A, 0x00
+
+floppy_disk_err:
+    db 0x0D, 0x0A, "[LIMBO LOADER FDA]: Read floppy disk A failed, AH=", 0x0D, 0x0A, 0x00
 
 msg_done:
     db "[LIMBO LOADER]: 32bit Protected mode is now active.", 0x0A, 0x00
@@ -546,12 +696,10 @@ greet32:
 initialize_interrupt:
         db "[LIMBO LOADER]: Initializing dummy interrupt request handler...", 0x00
 
-prepare_to_read_kernel:
-        db "[LIMBO LOADER]: Preparing to read kernel data from floppy disk A...", 0x00
+prepare_to_move_kernel:
+        db "[LIMBO LOADER]: Move kernel data from 0x9E00-0x9FBFF to 0x100000-0x195DFF...", 0x0A, 0x00
 
 done:   db "done.", 0x0A, 0x00
-
-fda_failed_msg: db "Floppy disk reading failed, error code=", 0x00
 
 align 16, db 0
 gdt: resb 64
@@ -574,8 +722,6 @@ idt_descriptor:
     dw idt_end - idt_start - 1  ; limit = size-1
 idt_descriptor_idt_start:
     dd 0                ; base = linear address of table
-
-fd_cache: resb 32
 
 segment _data_tail align=16
 _data_end:
