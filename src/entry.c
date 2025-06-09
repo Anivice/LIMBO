@@ -24,11 +24,16 @@
 
 #include "printk.h"
 
+/*!
+ * @brief Kernel entry point and stage dispatcher.
+ * This function is responsible for invoking different dispatchers to finish the boot sequence.
+ * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
+ * @return None, and is marked with [[noreturn]] so no return code is generated for main()
+ */
 [[noreturn]]
 __attribute__((section(".kernel_entry_point")))
-int main()
+void main()
 {
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-    printk("%d", -1234);
     while (true);
 }
