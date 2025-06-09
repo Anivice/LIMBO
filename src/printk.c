@@ -176,24 +176,30 @@ void printk(const char * fmt, ...)
                 case PRINT_NUMBER_IN_BASE10: {
                     const int num = __builtin_va_arg(ap, int);
                     print_num(num, attr, false);
+                    break;
                 }
                 case PRINT_UNSIGNED_NUMBER_IN_BASE10:
                 case PRINT_NUMBER_IN_BASE16:
                 {
                     const unsigned int num = __builtin_va_arg(ap, unsigned int);
                     print_num(num, attr, action == PRINT_NUMBER_IN_BASE16);
+                    break;
                 }
                 case PRINT_STRING: {
                     const char * str = __builtin_va_arg(ap, const char *);
                     puts(str, attr);
+                    break;
                 }
                 case PRINT_CHARACTER: {
                     const int c = __builtin_va_arg(ap, int); // 'char' is promoted to 'int' when passed through '...'
                     putc((char)c, attr);
+                    break;
                 }
                 case PRINT_NEXT_CHARACTER:
                 default: putc(fmt[i], attr); break;
             }
+
+            this_is_escape = false;
         }
         else
         {

@@ -5,6 +5,6 @@ __asm__("jmp main");
 [[noreturn]]
 int main()
 {
-    printk("Hello, world!\n");
+    printk("%s-\n", "Hello, world!");
     while (true);
 }
