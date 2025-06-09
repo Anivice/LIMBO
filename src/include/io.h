@@ -19,7 +19,7 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file define C wrapper for instructions `in` and `out`
+ * @brief This file defines C wrapper for instructions `in` and `out`
  **/
 
 #ifndef IO_H
