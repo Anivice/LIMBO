@@ -19,6 +19,7 @@ add_library(limbo SHARED src/entry.c
         src/io.c            src/include/io.h
         src/printk.c src/include/printk.h
 )
+add_compile_definitions(LIMBO_VERSION="0.0.1")
 
 form_1MB_kernel(liblimbo.so limbo.bin limbo)
 concatenate_files(boot.bin head.resized.bin limbo.bin)
