@@ -5,8 +5,6 @@ __asm__("jmp main");
 [[noreturn]]
 int main()
 {
-    while (1) {
-        print_num(1145141919, 0x07, true);
-    }
+    printk("Hello, world!\n");
     while (true);
 }
