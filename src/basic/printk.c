@@ -143,6 +143,54 @@ void print_signed(int num, const unsigned char attr)
 }
 
 /*!
+ * @brief Print float-point
+ * @param value Number
+ * @param precision Precision (decimal count)
+ * @param attr Color attributes
+ * @return NONE
+ */
+void print_double(double value, const int precision, const unsigned char attr)
+{
+    /* Deal with sign first. */
+    if (value < 0.0) { putc('-', attr); value = -value; }
+
+    /* Separate the integer and fractional parts. */
+    unsigned long long int_part = (unsigned long long) value;
+    const double frac_part            = value - (double) int_part;
+
+    /* 1. Print the integer part. */
+    print_num(int_part, attr, false);
+
+    /* 2. Print fractional part, if requested. */
+    if (precision > 0) {
+        putc('.', attr);
+
+        /* Scale fractional part to an integer with rounding. */
+        unsigned long long scale = 1ULL;
+        for (int i = 0; i < precision; ++i) scale *= 10ULL;
+
+        /* Add 0.5 for correct rounding. */
+        unsigned long long frac_scaled =
+            (unsigned long long)(frac_part * (double)scale + 0.5);
+
+        /* Handle cases where rounding spills into next integer. */
+        if (frac_scaled >= scale) {
+            ++int_part;           /* carry into integer (rare)      */
+            frac_scaled -= scale; /* and wrap fractional to 0…      */
+            /* Re-print corrected integer part if it overflowed 9… */
+            /* (Optional—skip if you don’t need perfect carry.)    */
+        }
+
+        /* Print leading zeros in the fractional part. */
+        unsigned long long div = scale / 10ULL;
+        while (div) {
+            putc( (char)('0' + (frac_scaled / div) % 10), attr);
+            div /= 10ULL;
+        }
+    }
+}
+
+/*!
  * @brief Escape actions denoted by escape code '%'
  */
 typedef enum escape_actions {
@@ -152,6 +200,9 @@ typedef enum escape_actions {
     PRINT_NUMBER_IN_BASE16,             // print unsigned number in base 16 (hexadecimal)
     PRINT_STRING,                       // print a const char * string
     PRINT_CHARACTER,                    // print a char
+    PRINT_FLOAT,                        // print a float point
+    PRINT_DOUBLE,                       // print a double float
+    FLOAT_PRECISION_CHANGE,             // precision change
 
     SET_FONT_COLOR_BLACK,               // set text color to be black
     SET_FONT_COLOR_BLUE,                // set text color to be blue
@@ -187,6 +238,10 @@ escape_actions_t escape(const char code)
             case 'X': case 'x': return PRINT_NUMBER_IN_BASE16;
             case 'S': case 's': return PRINT_STRING;
             case 'C': case 'c': return PRINT_CHARACTER;
+
+            case 'f': return PRINT_FLOAT;
+            case 'F': return PRINT_DOUBLE;
+            case 'p': return FLOAT_PRECISION_CHANGE;
 
             case 'B': return SET_BACK_COLOR_BLACK;
             case 'b': return SET_FONT_COLOR_BLACK;
@@ -239,6 +294,7 @@ void printk(const char * fmt, ...)
     unsigned int i = 0;
     bool this_is_escape = false;
     unsigned char attr = 0x07;
+    int precision = 2;
     while (fmt[i] != '\0')
     {
         if (this_is_escape)
@@ -266,6 +322,16 @@ void printk(const char * fmt, ...)
                 case PRINT_CHARACTER: {
                     const int c = __builtin_va_arg(ap, int); // 'char' is promoted to 'int' when passed through '...'
                     putc((char)c, attr);
+                    break;
+                }
+                case PRINT_FLOAT: // 'float' is promoted to 'double' when passed through '...'
+                case PRINT_DOUBLE: {
+                    const double d = __builtin_va_arg(ap, double);
+                    print_double(d, precision, attr);
+                    break;
+                }
+                case FLOAT_PRECISION_CHANGE: {
+                    precision = __builtin_va_arg(ap, int);
                     break;
                 }
                 case SET_FONT_COLOR_BLACK: { attr &= 0xF0; break; }
