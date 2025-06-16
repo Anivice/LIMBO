@@ -23,6 +23,7 @@
  **/
 
 #include "printk.h"
+#include "ide.h"
 
 /*!
  * @brief Kernel entry point and stage dispatcher.
@@ -34,6 +35,8 @@
 __attribute__((section(".kernel_entry_point")))
 void main()
 {
+    char buffer[4096] = {};
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
+    disk_read(buffer, 0, 4);
     while (true);
 }

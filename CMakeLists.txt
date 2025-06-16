@@ -18,6 +18,7 @@ add_library(limbo SHARED src/entry.c
         src/drivers/gpu.c src/include/gpu.h
         src/drivers/io.c src/include/io.h
         src/basic/printk.c src/include/printk.h
+        src/drivers/ide.c src/include/ide.h
 )
 
 execute_process(COMMAND sh -c "git log | head -n 1 | awk '{ print $NF }' | head -c 8"
