@@ -37,6 +37,7 @@ void main()
 {
     char buffer[4096] = {};
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-    disk_read(buffer, 0, 4);
+    disk_read(buffer, 1, 1);
+    disk_write(buffer, 1, 1);
     while (true);
 }

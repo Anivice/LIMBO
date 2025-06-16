@@ -2,5 +2,6 @@
 #define IDE_H
 
 void disk_read(char * buffer, unsigned int sector, unsigned char count);
+void disk_write(const char *buffer, unsigned int sector, unsigned char count);
 
 #endif //IDE_H
