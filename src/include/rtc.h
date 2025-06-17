@@ -5,5 +5,6 @@
 
 extern volatile uint64_t uptime;
 void rtc_irq_init(void);
+uint64_t read_rtc();
 
 #endif //RTC_H

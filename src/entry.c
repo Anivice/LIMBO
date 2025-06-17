@@ -77,6 +77,10 @@ void main()
     rtc_irq_init();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
     printk("%N");
-    while (1) printk("%d\r", uptime);
+    while (1)
+    {
+        // const uint64_t rtc = ;
+        printk("Uptime: %Ds, UNIX timestamp: %U\r", uptime, read_rtc());
+    }
     while (true);
 }

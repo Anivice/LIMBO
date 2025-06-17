@@ -117,11 +117,18 @@ void put(const char c)
  * @param base16 Is base16 mode active
  * @return NONE
  */
-void print_num(uint32_t num, const uint8_t attr, const bool base16)
+void print_num(uint64_t num, const uint8_t attr, const bool base16)
 {
     uint32_t p = 0;
     int i = 0;
-    uint32_t base = base16 ? 16 : 10;
+    int base = base16 ? 16 : 10;
+
+    if (num == 0)
+    {
+        putc('0', attr);
+        return;
+    }
+
     while (num != 0)
     {
         p = num % base;
@@ -151,6 +158,18 @@ void print_signed(int num, const uint8_t attr)
 {
     uint32_t unsigned_num = *(uint32_t*)&num;
     if ((unsigned_num & 0x80000000) != 0) {
+        putc('-', attr);
+        unsigned_num = ~unsigned_num;
+        unsigned_num++;
+    }
+
+    print_num(unsigned_num, attr, false);
+}
+
+void print_64bit_signed(int64_t num, const uint8_t attr)
+{
+    uint64_t unsigned_num = *(uint64_t*)&num;
+    if ((unsigned_num & 0x8000000000000000) != 0) {
         putc('-', attr);
         unsigned_num = ~unsigned_num;
         unsigned_num++;
@@ -222,6 +241,9 @@ typedef enum escape_actions {
     PRINT_NUMBER_IN_BASE10,             // print signed number in base 10 (decimal)
     PRINT_UNSIGNED_NUMBER_IN_BASE10,    // print unsigned number in base 10 (decimal)
     PRINT_NUMBER_IN_BASE16,             // print unsigned number in base 16 (hexadecimal)
+    PRINT_64BIT_NUMBER_IN_BASE10,       // print signed number in base 10 (decimal)
+    PRINT_64BIT_UNSIGNED_NUMBER_IN_BASE10, // print unsigned number in base 10 (decimal)
+    PRINT_64BIT_NUMBER_IN_BASE16,       // print unsigned number in base 16 (hexadecimal)
     PRINT_STRING,                       // print a const char * string
     PRINT_CHARACTER,                    // print a char
     PRINT_FLOAT,                        // print a float point
@@ -260,9 +282,12 @@ typedef enum escape_actions {
 escape_actions_t escape(const char code)
 {
     switch (code) {
-            case 'D': case 'd': return PRINT_NUMBER_IN_BASE10;
-            case 'U': case 'u': return PRINT_UNSIGNED_NUMBER_IN_BASE10;
-            case 'X': case 'x': return PRINT_NUMBER_IN_BASE16;
+            case 'd': return PRINT_NUMBER_IN_BASE10;
+            case 'D': return PRINT_64BIT_NUMBER_IN_BASE10;
+            case 'u': return PRINT_UNSIGNED_NUMBER_IN_BASE10;
+            case 'U': return PRINT_64BIT_UNSIGNED_NUMBER_IN_BASE10;
+            case 'x': return PRINT_NUMBER_IN_BASE16;
+            case 'X': return PRINT_64BIT_NUMBER_IN_BASE16;
             case 'S': case 's': return PRINT_STRING;
             case 'C': case 'c': return PRINT_CHARACTER;
 
@@ -342,6 +367,18 @@ void printk(const char * fmt, ...)
                 {
                     const uint32_t num = __builtin_va_arg(ap, uint32_t);
                     print_num(num, attr, action == PRINT_NUMBER_IN_BASE16);
+                    break;
+                }
+                case PRINT_64BIT_NUMBER_IN_BASE10: {
+                    const int64_t num = __builtin_va_arg(ap, int64_t);
+
+                    print_64bit_signed(num, attr);
+                    break;
+                }
+                case PRINT_64BIT_UNSIGNED_NUMBER_IN_BASE10:
+                case PRINT_64BIT_NUMBER_IN_BASE16: {
+                    const uint64_t num = __builtin_va_arg(ap, uint64_t);
+                    print_num(num, attr, action == PRINT_64BIT_NUMBER_IN_BASE16);
                     break;
                 }
                 case PRINT_STRING: {
