@@ -44,7 +44,7 @@ void rtc_irq_handler(void)
     );
 }
 
-void idt_set_gate(uint8_t vector, uint32_t handler_addr, uint16_t selector, uint8_t flags);
+// void idt_set_gate(uint8_t vector, uint32_t handler_addr, uint16_t selector, uint8_t flags);
 
 void rtc_irq_init(void)
 {

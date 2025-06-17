@@ -32,6 +32,12 @@
  * @returns NOTHING
  */
 void printk(const char * fmt, ...);
+
+/*!
+ * @brief Print a character with default color attribute
+ * @param c Character
+ * @return NONE
+ */
 void put(char c);
 
 #endif //PRINTK_H

@@ -9,9 +9,31 @@ concatenate_files(head.bin bootsec.bin loader.bin)
 fill_space_with_empty_sectors(head.bin head.resized.bin 18) # head is 18 sector in length
 
 set(CMAKE_C_STANDARD 23)
-add_compile_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
+add_compile_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386
+        -Wall -Wextra -nostdinc -fno-omit-frame-pointer
+        -Werror=implicit-function-declaration
+        -Werror=missing-include-dirs
+        -Wunused                                # Warn about unused variables, functions, etc.
+        -Wuninitialized                         # Warn if variables are used uninitialized
+        -fdiagnostics-show-option               # Show which option triggered the warning
+        -fdiagnostics-color=always              # Enable colored diagnostics for better readability
+        -g3                                     # Maximum debug information, including macro expansions
+        -O0
+        -gdwarf-4                               # Generate DWARF version 4 debug information
+)
 add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
-        -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
+        -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386 -fno-omit-frame-pointer
+        -Wall -Wextra -nostdinc
+        -Werror=implicit-function-declaration
+        -Werror=missing-include-dirs
+        -Wunused                                # Warn about unused variables, functions, etc.
+        -Wuninitialized                         # Warn if variables are used uninitialized
+        -fdiagnostics-show-option               # Show which option triggered the warning
+        -fdiagnostics-color=always              # Enable colored diagnostics for better readability
+        -g3                                     # Maximum debug information, including macro expansions
+        -O0
+        -gdwarf-4                               # Generate DWARF version 4 debug information
+)
 
 include_directories(src/include)
 add_library(limbo SHARED src/entry.c
@@ -23,10 +45,12 @@ add_library(limbo SHARED src/entry.c
         src/drivers/idt.c       src/include/idt.h
         src/drivers/rtc.c       src/include/rtc.h
         src/include/stdint.h    src/include/types.h
-        src/drivers/irq.c
-        src/include/irq.h
+        src/drivers/irq.c       src/include/irq.h
+        src/basic/die.c         src/include/die.h
+        src/basic/backtracer.c  src/include/backtracer.h
 )
 target_link_libraries(limbo PRIVATE gcc)
+add_compile_definitions(__DEBUG__)
 
 execute_process(COMMAND sh -c "git log | head -n 1 | awk '{ print $NF }' | head -c 8"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

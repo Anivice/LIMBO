@@ -24,9 +24,9 @@
 
 #include "printk.h"
 #include "rtc.h"
-#include "stdint.h"
-#include "idt.h"
+#include "types.h"
 #include "irq.h"
+#include "die.h"
 
 /*!
  * @brief Enable FPU
@@ -77,10 +77,7 @@ void main()
     rtc_irq_init();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
     printk("%N");
-    while (1)
-    {
-        // const uint64_t rtc = ;
-        printk("Uptime: %Ds, UNIX timestamp: %U\r", uptime, read_rtc());
-    }
-    while (true);
+    printk("Uptime: %Ds, UNIX timestamp: %U\r", uptime, read_rtc());
+    printk("%n");
+    die("Unexpected reach of the end of kernel entry point!");
 }

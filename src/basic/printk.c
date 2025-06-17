@@ -25,6 +25,7 @@
 #include "printk.h"
 #include "gpu.h"
 #include "stdint.h"
+#include "types.h"
 
 /*!
  * @brief Scroll screen upwards one line
@@ -100,11 +101,6 @@ void putc(const char c, const uint8_t attr)
     set_cursor_loc(cursor_pos + 1);
 }
 
-/*!
- * @brief Print a character with default color attribute
- * @param c Character
- * @return NONE
- */
 void put(const char c)
 {
     putc(c, 0x07);
@@ -233,46 +229,46 @@ void print_double(double value, const int precision, const uint8_t attr)
     }
 }
 
-/*!
- * @brief Escape actions denoted by escape code '%'
- */
-typedef enum escape_actions {
-    PRINT_NEXT_CHARACTER,               // print character right after %
-    PRINT_NUMBER_IN_BASE10,             // print signed number in base 10 (decimal)
-    PRINT_UNSIGNED_NUMBER_IN_BASE10,    // print unsigned number in base 10 (decimal)
-    PRINT_NUMBER_IN_BASE16,             // print unsigned number in base 16 (hexadecimal)
-    PRINT_64BIT_NUMBER_IN_BASE10,       // print signed number in base 10 (decimal)
-    PRINT_64BIT_UNSIGNED_NUMBER_IN_BASE10, // print unsigned number in base 10 (decimal)
-    PRINT_64BIT_NUMBER_IN_BASE16,       // print unsigned number in base 16 (hexadecimal)
-    PRINT_STRING,                       // print a const char * string
-    PRINT_CHARACTER,                    // print a char
-    PRINT_FLOAT,                        // print a float point
-    PRINT_DOUBLE,                       // print a double float
-    FLOAT_PRECISION_CHANGE,             // precision change
-
-    CURSOR_HIDE,                        // cursor hide
-    CURSOR_SHOW,                        // cursor show
-
-    SET_FONT_COLOR_BLACK,               // set text color to be black
-    SET_FONT_COLOR_BLUE,                // set text color to be blue
-    SET_FONT_COLOR_GREEN,               // set text color to be green
-    SET_FONT_COLOR_CYAN,                // set text color to be cyan
-    SET_FONT_COLOR_RED,                 // set text color to be red
-    SET_FONT_COLOR_MAGENTA,             // set text color to be magenta
-    SET_FONT_COLOR_YELLOW,              // set text color to be yellow
-    SET_FONT_COLOR_WHITE,               // set text color to be white
-
-    SET_BACK_COLOR_BLACK,               // set background color to be black
-    SET_BACK_COLOR_BLUE,                // set background color to be blue
-    SET_BACK_COLOR_GREEN,               // set background color to be green
-    SET_BACK_COLOR_CYAN,                // set background color to be cyan
-    SET_BACK_COLOR_RED,                 // set background color to be red
-    SET_BACK_COLOR_MAGENTA,             // set background color to be magenta
-    SET_BACK_COLOR_YELLOW,              // set background color to be yellow
-    SET_BACK_COLOR_WHITE,               // set background color to be white
-
-    SET_TO_DEFAULT_COLOR,               // set background color to be black and text to be white
-} escape_actions_t;
+// /*!
+//  * @brief Escape actions denoted by escape code '%'
+//  */
+// typedef enum escape_actions {
+//     PRINT_NEXT_CHARACTER,               // print character right after %
+//     PRINT_NUMBER_IN_BASE10,             // print signed number in base 10 (decimal)
+//     PRINT_UNSIGNED_NUMBER_IN_BASE10,    // print unsigned number in base 10 (decimal)
+//     PRINT_NUMBER_IN_BASE16,             // print unsigned number in base 16 (hexadecimal)
+//     PRINT_64BIT_NUMBER_IN_BASE10,       // print signed number in base 10 (decimal)
+//     PRINT_64BIT_UNSIGNED_NUMBER_IN_BASE10, // print unsigned number in base 10 (decimal)
+//     PRINT_64BIT_NUMBER_IN_BASE16,       // print unsigned number in base 16 (hexadecimal)
+//     PRINT_STRING,                       // print a const char * string
+//     PRINT_CHARACTER,                    // print a char
+//     PRINT_FLOAT,                        // print a float point
+//     PRINT_DOUBLE,                       // print a double float
+//     FLOAT_PRECISION_CHANGE,             // precision change
+//
+//     CURSOR_HIDE,                        // cursor hide
+//     CURSOR_SHOW,                        // cursor show
+//
+//     SET_FONT_COLOR_BLACK,               // set text color to be black
+//     SET_FONT_COLOR_BLUE,                // set text color to be blue
+//     SET_FONT_COLOR_GREEN,               // set text color to be green
+//     SET_FONT_COLOR_CYAN,                // set text color to be cyan
+//     SET_FONT_COLOR_RED,                 // set text color to be red
+//     SET_FONT_COLOR_MAGENTA,             // set text color to be magenta
+//     SET_FONT_COLOR_YELLOW,              // set text color to be yellow
+//     SET_FONT_COLOR_WHITE,               // set text color to be white
+//
+//     SET_BACK_COLOR_BLACK,               // set background color to be black
+//     SET_BACK_COLOR_BLUE,                // set background color to be blue
+//     SET_BACK_COLOR_GREEN,               // set background color to be green
+//     SET_BACK_COLOR_CYAN,                // set background color to be cyan
+//     SET_BACK_COLOR_RED,                 // set background color to be red
+//     SET_BACK_COLOR_MAGENTA,             // set background color to be magenta
+//     SET_BACK_COLOR_YELLOW,              // set background color to be yellow
+//     SET_BACK_COLOR_WHITE,               // set background color to be white
+//
+//     SET_TO_DEFAULT_COLOR,               // set background color to be black and text to be white
+// } escape_actions_t;
 
 /*!
  * @brief Translate escape code into meaningful actions
