@@ -24,7 +24,7 @@
 
 #include "io.h"
 
-void out8(unsigned short port, unsigned char value)
+void out8(const uint16_t port, const uint8_t value)
 {
     __asm__ volatile (
         "outb   %%al,   %%dx        \n\t"
@@ -34,7 +34,7 @@ void out8(unsigned short port, unsigned char value)
     );
 }
 
-void out16(unsigned short port, unsigned short value)
+void out16(const uint16_t port, const uint16_t value)
 {
     __asm__ volatile (
         "outw   %%ax,   %%dx        \n\t"
@@ -44,9 +44,9 @@ void out16(unsigned short port, unsigned short value)
     );
 }
 
-void in8(unsigned short port, unsigned char *value)
+void in8(const uint16_t port, uint8_t *value)
 {
-    unsigned char result;
+    uint8_t result;
     __asm__ volatile (
         "xor    %%eax,  %%eax       \n\t"
         "inb    %%dx,   %%al        \n\t"
@@ -58,9 +58,9 @@ void in8(unsigned short port, unsigned char *value)
     *value = result;
 }
 
-void in16(unsigned short port, unsigned short *value)
+void in16(const uint16_t port, uint16_t *value)
 {
-    unsigned short result;
+    uint16_t result;
     __asm__ volatile (
         "xor    %%eax,  %%eax       \n\t"
         "inw    %%dx,   %%ax        \n\t"

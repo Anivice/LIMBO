@@ -9,18 +9,22 @@ concatenate_files(head.bin bootsec.bin loader.bin)
 fill_space_with_empty_sectors(head.bin head.resized.bin 18) # head is 18 sector in length
 
 set(CMAKE_C_STANDARD 23)
-add_compile_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie)
+add_compile_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
 add_link_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
-        -fno-PIE -fno-PIC -no-pie -Wl,-no-pie)
+        -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
 
 include_directories(src/include)
 add_library(limbo SHARED src/entry.c
-        src/drivers/gpu.c src/include/gpu.h
-        src/drivers/io.c src/include/io.h
-        src/basic/printk.c src/include/printk.h
-        src/drivers/ide.c src/include/ide.h
-        src/basic/string.c src/include/string.h
+        src/drivers/gpu.c   src/include/gpu.h
+        src/drivers/io.c    src/include/io.h
+        src/basic/printk.c  src/include/printk.h
+        src/drivers/ide.c   src/include/ide.h
+        src/basic/string.c  src/include/string.h
+        src/drivers/rtc.c   src/include/rtc.h
+        src/include/stdint.h
+        src/include/types.h
 )
+target_link_libraries(limbo PRIVATE gcc)
 
 execute_process(COMMAND sh -c "git log | head -n 1 | awk '{ print $NF }' | head -c 8"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

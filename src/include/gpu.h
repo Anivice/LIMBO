@@ -25,18 +25,20 @@
 #ifndef GPU_H
 #define GPU_H
 
+#include "stdint.h"
+
 /*!
  * @brief Get current cursor location
  * @return Current cursor location index [0-1999]
  */
-unsigned short get_cursor_loc();
+[[nodiscard]] uint16_t get_cursor_loc();
 
 /*!
  * @brief Set new cursor location
  * @param loc New cursor location
  * @returns Nothing
  */
-void set_cursor_loc(unsigned short loc);
+void set_cursor_loc(uint16_t loc);
 
 /*!
  * @brief Write directly to VGA video memory
@@ -45,6 +47,6 @@ void set_cursor_loc(unsigned short loc);
  * @param attr Color attributes
  * @returns Nothing
  */
-void write_to_video_memory(char c, unsigned loc, unsigned char attr);
+void write_to_video_memory(char c, uint32_t loc, uint8_t attr);
 
 #endif //GPU_H

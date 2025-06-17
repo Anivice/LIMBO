@@ -1,6 +1,6 @@
 #include "string.h"
 
-void memset(void * dest, int val, unsigned int size)
+void memset(void * dest, const int val, const uint32_t size)
 {
     __asm__ __volatile__(
     "pushl %%eax               \n\t"
@@ -21,5 +21,5 @@ void memset(void * dest, int val, unsigned int size)
     : : "r" (dest), "r" (size), "r" (val) : "memory");
 }
 
-void memcpy(void * dest, const void * src, unsigned int size);
-int memcmp(const void * s1, const void * s2, unsigned int n);
+void memcpy(void * dest, const void * src, uint32_t size);
+int memcmp(const void * s1, const void * s2, uint32_t n);

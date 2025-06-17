@@ -30,7 +30,7 @@
 #define GPU_CURSOR_L8_BIT  (0x0f)
 #define GPU_INDEXED_REG_IO (0x3d5)
 
-void write_to_video_memory(char c, unsigned loc, unsigned char attr)
+void write_to_video_memory(const char c, const uint32_t loc, const uint8_t attr)
 {
     __asm__ volatile (
         "movb   %b0,(%1,%2,2)\n\t"
@@ -49,21 +49,21 @@ void write_to_video_memory(char c, unsigned loc, unsigned char attr)
     );
 }
 
-unsigned short get_cursor_loc()
+uint16_t get_cursor_loc()
 {
-    unsigned short loc;
+    uint16_t loc;
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_H8_BIT);
-    in8(GPU_INDEXED_REG_IO, (unsigned char*)&loc + 1);
+    in8(GPU_INDEXED_REG_IO, (uint8_t*)&loc + 1);
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_L8_BIT);
-    in8(GPU_INDEXED_REG_IO, (unsigned char*)&loc);
+    in8(GPU_INDEXED_REG_IO, (uint8_t*)&loc);
 
     return loc;
 }
 
-void set_cursor_loc(unsigned short loc)
+void set_cursor_loc(const uint16_t loc)
 {
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_H8_BIT);
-    out8(GPU_INDEXED_REG_IO, ((unsigned char*)&loc)[1]);
+    out8(GPU_INDEXED_REG_IO, ((uint8_t*)&loc)[1]);
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_L8_BIT);
-    out8(GPU_INDEXED_REG_IO, (unsigned char)loc);
+    out8(GPU_INDEXED_REG_IO, (uint8_t)loc);
 }

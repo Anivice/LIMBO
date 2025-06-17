@@ -24,7 +24,7 @@
 
 #include "printk.h"
 #include "gpu.h"
-
+#include "stdint.h"
 
 /*!
  * @brief Scroll screen upwards one line
@@ -64,9 +64,9 @@ static void scroll_one_line()
  * @param attr Color attribute
  * @return NONE
  */
-void putc(const char c, const unsigned char attr)
+void putc(const char c, const uint8_t attr)
 {
-    unsigned short cursor_pos = get_cursor_loc();
+    uint16_t cursor_pos = get_cursor_loc();
     if ((cursor_pos >= 1920 && c == '\n') || cursor_pos == 1999)
     {
         scroll_one_line();
@@ -82,7 +82,7 @@ void putc(const char c, const unsigned char attr)
     if (c == '\n')
     {
         if (cursor_pos % 80 != 0) {
-            const unsigned short new_index = (cursor_pos / 80) * 80 + 80;
+            const uint16_t new_index = (cursor_pos / 80) * 80 + 80;
             set_cursor_loc(new_index);
         }
 
@@ -100,11 +100,11 @@ void putc(const char c, const unsigned char attr)
  * @param base16 Is base16 mode active
  * @return NONE
  */
-void print_num(unsigned int num, const unsigned char attr, const bool base16)
+void print_num(uint32_t num, const uint8_t attr, const bool base16)
 {
-    unsigned int p = 0;
+    uint32_t p = 0;
     int i = 0;
-    unsigned int base = base16 ? 16 : 10;
+    uint32_t base = base16 ? 16 : 10;
     while (num != 0)
     {
         p = num % base;
@@ -130,9 +130,9 @@ void print_num(unsigned int num, const unsigned char attr, const bool base16)
  * @param attr Color attributes
  * @return NONE
  */
-void print_signed(int num, const unsigned char attr)
+void print_signed(int num, const uint8_t attr)
 {
-    unsigned int unsigned_num = *(unsigned*)&num;
+    uint32_t unsigned_num = *(uint32_t*)&num;
     if ((unsigned_num & 0x80000000) != 0) {
         putc('-', attr);
         unsigned_num = ~unsigned_num;
@@ -149,40 +149,47 @@ void print_signed(int num, const unsigned char attr)
  * @param attr Color attributes
  * @return NONE
  */
-void print_double(double value, const int precision, const unsigned char attr)
+void print_double(double value, const int precision, const uint8_t attr)
 {
-    /* Deal with sign first. */
-    if (value < 0.0) { putc('-', attr); value = -value; }
+    uint64_t int_part = 0;
+    double frac_part;
+    uint64_t scale = 0;
+    uint64_t frac_scaled = 0;
+    uint64_t div = 0;
 
-    /* Separate the integer and fractional parts. */
-    unsigned long long int_part = (unsigned long long) value;
-    const double frac_part            = value - (double) int_part;
+    // Deal with sign first.
+    if (value < 0.0)
+    {
+        putc('-', attr); value = -value;
+    }
 
-    /* 1. Print the integer part. */
+    // Separate the integer and fractional parts.
+    int_part = (uint64_t) value;
+    frac_part = value - (double) int_part;
+
+    // Print the integer part.
     print_num(int_part, attr, false);
 
-    /* 2. Print fractional part, if requested. */
-    if (precision > 0) {
+    // Print fractional part, if requested.
+    if (precision > 0)
+    {
         putc('.', attr);
 
-        /* Scale fractional part to an integer with rounding. */
-        unsigned long long scale = 1ULL;
+        // Scale fractional part to an integer with rounding.
+        scale = 1ULL;
         for (int i = 0; i < precision; ++i) scale *= 10ULL;
 
-        /* Add 0.5 for correct rounding. */
-        unsigned long long frac_scaled =
-            (unsigned long long)(frac_part * (double)scale + 0.5);
+        // Add 0.5 for correct rounding.
+        frac_scaled = (uint64_t)(frac_part * (double)scale + 0.5);
 
-        /* Handle cases where rounding spills into next integer. */
+        // Handle cases where rounding spills into the next integer.
         if (frac_scaled >= scale) {
-            ++int_part;           /* carry into integer (rare)      */
-            frac_scaled -= scale; /* and wrap fractional to 0…      */
-            /* Re-print corrected integer part if it overflowed 9… */
-            /* (Optional—skip if you don’t need perfect carry.)    */
+            ++int_part;
+            frac_scaled -= scale;
         }
 
-        /* Print leading zeros in the fractional part. */
-        unsigned long long div = scale / 10ULL;
+        // Print leading zeros in the fractional part.
+        div = scale / 10ULL;
         while (div) {
             putc( (char)('0' + (frac_scaled / div) % 10), attr);
             div /= 10ULL;
@@ -278,7 +285,7 @@ escape_actions_t escape(const char code)
  * @param attr Color attributes
  * @return NOTHING
  */
-void puts(const char *str, const unsigned char attr)
+void puts(const char *str, const uint8_t attr)
 {
     while (*str) {
         putc(*str, attr);
@@ -291,9 +298,9 @@ void printk(const char * fmt, ...)
     __builtin_va_list ap;
     __builtin_va_start(ap, fmt);
 
-    unsigned int i = 0;
+    uint32_t i = 0;
     bool this_is_escape = false;
-    unsigned char attr = 0x07;
+    uint8_t attr = 0x07;
     int precision = 2;
     while (fmt[i] != '\0')
     {
@@ -310,7 +317,7 @@ void printk(const char * fmt, ...)
                 case PRINT_UNSIGNED_NUMBER_IN_BASE10:
                 case PRINT_NUMBER_IN_BASE16:
                 {
-                    const unsigned int num = __builtin_va_arg(ap, unsigned int);
+                    const uint32_t num = __builtin_va_arg(ap, uint32_t);
                     print_num(num, attr, action == PRINT_NUMBER_IN_BASE16);
                     break;
                 }

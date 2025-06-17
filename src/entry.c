@@ -23,24 +23,36 @@
  **/
 
 #include "printk.h"
-#include "ide.h"
-#include "string.h"
+#include "rtc.h"
+#include "stdint.h"
+
+/*!
+ * @brief Enable FPU
+ */
+static void enable_fpu(void)
+{
+    uint32_t cr0;
+    __asm__ volatile ("mov %%cr0, %0" : "=r"(cr0));
+    cr0 &= ~(1UL << 2);   /* clear EM */
+    cr0 &= ~(1UL << 3);   /* clear TS */
+    cr0 |=  (1UL << 5);   /* set NE: report FP errors via #MF */
+    __asm__ volatile ("mov %0, %%cr0" :: "r"(cr0));
+    __asm__ volatile ("fninit");     /* initialise x87 state */
+}
 
 /*!
  * @brief Kernel entry point and stage dispatcher.
  * This function is responsible for invoking different dispatchers to finish the boot sequence.
  * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
- * @return None, and is marked with [[noreturn]] so no return code is generated for main()
+ * @return None, and is marked with [[noreturn]], so no return code is generated for main()
  */
 [[noreturn]]
 __attribute__((section(".kernel_entry_point")))
 void main()
 {
-    char buffer[4096] = {};
+    enable_fpu();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-    disk_read(buffer, 1, 1);
-    disk_write(buffer, 1, 1);
-    memset(buffer, 0, sizeof(buffer));
-    printk("%p%F\n", 3, 12.567f);
+    uptime = 5521;
+    printk("%d\n", uptime);
     while (true);
 }

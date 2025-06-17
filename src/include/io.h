@@ -25,13 +25,15 @@
 #ifndef IO_H
 #define IO_H
 
+#include "stdint.h"
+
 /*!
  * @brief output an 8 bit value to a port
  * @param port Port
  * @param value Value
  * @returns Nothing
  */
-void out8(unsigned short port, unsigned char value);
+void out8(uint16_t port, uint8_t value);
 
 /*!
  * @brief output a 16 bit value to a port
@@ -39,7 +41,7 @@ void out8(unsigned short port, unsigned char value);
  * @param value Value
  * @returns Nothing
  */
-void out16(unsigned short port, unsigned short value);
+void out16(uint16_t port, uint16_t value);
 
 /*!
  * @brief input an 8 bit value to a port
@@ -47,7 +49,7 @@ void out16(unsigned short port, unsigned short value);
  * @param value Value
  * @returns Nothing
  */
-void in8(unsigned short port, unsigned char *value);
+void in8(uint16_t port, uint8_t *value);
 
 /*!
  * @brief input an 16 bit value to a port
@@ -55,6 +57,6 @@ void in8(unsigned short port, unsigned char *value);
  * @param value Value
  * @returns Nothing
  */
-void in16(unsigned short port, unsigned short *value);
+void in16(uint16_t port, uint16_t *value);
 
 #endif //IO_H
