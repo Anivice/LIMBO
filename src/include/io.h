@@ -59,4 +59,13 @@ void in8(uint16_t port, uint8_t *value);
  */
 void in16(uint16_t port, uint16_t *value);
 
+/*!
+ * @brief input an 8 bit value to a port
+ * @param port Port
+ * @returns Value
+ */
+uint8_t inb(uint16_t port);
+
+#define outb(port, value) out8(port, value)
+
 #endif //IO_H

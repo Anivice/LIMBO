@@ -67,3 +67,17 @@ void set_cursor_loc(const uint16_t loc)
     out8(GPU_REGISTER_INDEX, GPU_CURSOR_L8_BIT);
     out8(GPU_INDEXED_REG_IO, (uint8_t)loc);
 }
+
+void cursor_hide()
+{
+    outb(0x3D4, 0x0A);
+    const uint8_t al = inb(0x3D5) | 0x20;
+    outb(0x3D5, al);
+}
+
+void cursor_show()
+{
+    outb(0x3D4, 0x0A);
+    const uint8_t al = inb(0x3D5) & 0xDF;
+    outb(0x3D5, al);
+}

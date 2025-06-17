@@ -20,29 +20,43 @@
 #define SLAVE_8259              (0xA0)
 #define EOI                     (0x20)
 
-void rtc_irq_handler(void);
+volatile uint64_t uptime;
+
+__attribute__((naked))
+void rtc_irq_handler(void)
+{
+    __asm__ volatile(
+        "   pusha                                           \n\t"
+        "   mov     $0x0C,              %al                 \n\t"
+        "   out     %al,                $0x70               \n\t"
+        "   in      $0x71,              %al                 \n\t"
+
+        "   xor     %eax,               %eax                \n\t"
+        "   mov     "str(uptime)",      %eax                \n\t"
+        "   inc     %eax                                    \n\t"
+        "   mov     %eax,               "str(uptime)"       \n\t"
+
+        "   movb    $0x20,              %al                 \n\t"
+        "   out     %al,                $0xA0               \n\t"
+        "   out     %al,                $0x20               \n\t"
+        "   popa                                            \n\t"
+        "   iret                                            \n\t"
+    );
+}
+
+void idt_set_gate(uint8_t vector, uint32_t handler_addr, uint16_t selector, uint8_t flags);
 
 void rtc_irq_init(void)
 {
-    /* 1. Mask IRQ 8 while we fiddle: set bit 0 of the slave mask. */
-    uint8_t pic2_mask;
-    in8(I8259_IMR, &pic2_mask);
-    out8(I8259_IMR, pic2_mask | 0x01);
-
-    /* 2. Disable NMI (bit 7) and select register B, then set UIE. */
-    out8(RTC_REGISTER_INDEX, 0x80 | 0x0B);              /* NMI off, index = 0x0B */
-    uint8_t prevB;
-    in8(RTC_REGISTER_IO, &prevB);
-    out8(RTC_REGISTER_INDEX, 0x80 | 0x0B);              /* need to re-set index after read */
-    out8(RTC_REGISTER_IO, (prevB | 0x20) & ~0x40);      /* UIE=1, PIE=0, keep others */
-
-    /* 3. Acknowledge any pending old RTC interrupt by reading reg C. */
-    out8(RTC_REGISTER_INDEX, 0x0C);                     /* NMI already clear */
-    uint8_t dummy;
-    in8(RTC_REGISTER_IO, &dummy);                           /* throw away result */
-
-    /* 4. Unmask IRQ 8 again. */
-    out8(I8259_IMR, pic2_mask & ~0x01);
+    __asm__ volatile("cli");
+    idt_set_gate(0x70, (uint32_t)(void*)rtc_irq_handler, 0x10, 0x8E);
+    outb(0x70, 0x8B);
+    outb(0x71, 0x12);
+    outb(0x70, 0x0C);
+    inb(0x71);
+    outb(0xa1, 0xFE);
+    outb(0x21, 0xFB);
+    __asm__ volatile("sti");
 }
 
 // /*!
@@ -122,26 +136,3 @@ void rtc_irq_init(void)
 //     const unsigned char year = bcd_to_numeric(read_rtc_register(RTC_REGISTER_YER)) + 2000;
 //     return unix_timestamp(year, month, day, hour, minute, second);
 // }
-
-volatile uint64_t uptime;
-
-[[noreturn]]
-__attribute__((naked))
-void rtc_irq_handler(void)
-{
-    __asm__ volatile(
-        "   pusha                                           \n\t"
-        "   mov     $0x0C,              %al                 \n\t"
-        "   out     %al,                $0x70               \n\t"
-        "   in      $0x71,              %al                 \n\t"
-        "   movb    $0x20,              %al                 \n\t"
-        "   out     %al,                $0xA0               \n\t"
-        "   out     %al,                $0x20               \n\t"
-        "   xor     %eax,               %eax                \n\t"
-        "   mov     "str(uptime)",      %eax                \n\t"
-        "   inc     %eax                                    \n\t"
-        "   mov     %eax,               "str(uptime)"       \n\t"
-        "   popa                                            \n\t"
-        "   iret                                            \n\t"
-    );
-}

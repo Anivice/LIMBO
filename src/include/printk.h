@@ -32,5 +32,6 @@
  * @returns NOTHING
  */
 void printk(const char * fmt, ...);
+void put(char c);
 
 #endif //PRINTK_H

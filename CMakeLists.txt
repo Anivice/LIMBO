@@ -15,15 +15,16 @@ add_link_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -
 
 include_directories(src/include)
 add_library(limbo SHARED src/entry.c
-        src/drivers/gpu.c   src/include/gpu.h
-        src/drivers/io.c    src/include/io.h
-        src/basic/printk.c  src/include/printk.h
-        src/drivers/ide.c   src/include/ide.h
-        src/basic/string.c  src/include/string.h
-        src/drivers/rtc.c   src/include/rtc.h
-        src/include/stdint.h
-        src/include/types.h
-        src/drivers/idt.c   src/include/idt.h
+        src/drivers/gpu.c       src/include/gpu.h
+        src/drivers/io.c        src/include/io.h
+        src/basic/printk.c      src/include/printk.h
+        src/drivers/ide.c       src/include/ide.h
+        src/basic/string.c      src/include/string.h
+        src/drivers/idt.c       src/include/idt.h
+        src/drivers/rtc.c       src/include/rtc.h
+        src/include/stdint.h    src/include/types.h
+        src/drivers/irq.c
+        src/include/irq.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 

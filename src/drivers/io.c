@@ -29,7 +29,7 @@ void out8(const uint16_t port, const uint8_t value)
     __asm__ volatile (
         "outb   %%al,   %%dx        \n\t"
         :
-        : "d"(port), "a"(value)
+        : "Nd"(port), "a"(value)
         : "memory"
     );
 }
@@ -39,7 +39,7 @@ void out16(const uint16_t port, const uint16_t value)
     __asm__ volatile (
         "outw   %%ax,   %%dx        \n\t"
         :
-        : "d"(port), "a"(value)
+        : "Nd"(port), "a"(value)
         : "memory"
     );
 }
@@ -51,7 +51,7 @@ void in8(const uint16_t port, uint8_t *value)
         "xor    %%eax,  %%eax       \n\t"
         "inb    %%dx,   %%al        \n\t"
         : "=a"(result)
-        : "d"(port), "0"(value)
+        : "Nd"(port), "0"(value)
         : "memory"
     );
 
@@ -65,9 +65,16 @@ void in16(const uint16_t port, uint16_t *value)
         "xor    %%eax,  %%eax       \n\t"
         "inw    %%dx,   %%ax        \n\t"
         : "=a"(result)
-        : "d"(port), "0"(value)
+        : "Nd"(port), "0"(value)
         : "memory"
     );
 
     *value = result;
+}
+
+uint8_t inb(const uint16_t port)
+{
+    uint8_t value;
+    in8(port, &value);
+    return value;
 }

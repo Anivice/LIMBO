@@ -67,6 +67,13 @@ static void scroll_one_line()
 void putc(const char c, const uint8_t attr)
 {
     uint16_t cursor_pos = get_cursor_loc();
+
+    if (c == '\r')
+    {
+        set_cursor_loc(cursor_pos / 80 * 80);
+        return;
+    }
+
     if ((cursor_pos >= 1920 && c == '\n') || cursor_pos == 1999)
     {
         scroll_one_line();
@@ -91,6 +98,16 @@ void putc(const char c, const uint8_t attr)
 
     write_to_video_memory(c, cursor_pos, attr);
     set_cursor_loc(cursor_pos + 1);
+}
+
+/*!
+ * @brief Print a character with default color attribute
+ * @param c Character
+ * @return NONE
+ */
+void put(const char c)
+{
+    putc(c, 0x07);
 }
 
 /*!
@@ -211,6 +228,9 @@ typedef enum escape_actions {
     PRINT_DOUBLE,                       // print a double float
     FLOAT_PRECISION_CHANGE,             // precision change
 
+    CURSOR_HIDE,                        // cursor hide
+    CURSOR_SHOW,                        // cursor show
+
     SET_FONT_COLOR_BLACK,               // set text color to be black
     SET_FONT_COLOR_BLUE,                // set text color to be blue
     SET_FONT_COLOR_GREEN,               // set text color to be green
@@ -249,6 +269,9 @@ escape_actions_t escape(const char code)
             case 'f': return PRINT_FLOAT;
             case 'F': return PRINT_DOUBLE;
             case 'p': return FLOAT_PRECISION_CHANGE;
+
+            case 'N': return CURSOR_HIDE;
+            case 'n': return CURSOR_SHOW;
 
             case 'B': return SET_BACK_COLOR_BLACK;
             case 'b': return SET_FONT_COLOR_BLACK;
@@ -339,6 +362,14 @@ void printk(const char * fmt, ...)
                 }
                 case FLOAT_PRECISION_CHANGE: {
                     precision = __builtin_va_arg(ap, int);
+                    break;
+                }
+                case CURSOR_HIDE: {
+                    cursor_hide();
+                    break;
+                }
+                case CURSOR_SHOW: {
+                    cursor_show();
                     break;
                 }
                 case SET_FONT_COLOR_BLACK: { attr &= 0xF0; break; }
