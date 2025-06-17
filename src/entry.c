@@ -56,7 +56,7 @@ static void install_irq(void)
 
     for (int i = 0; i < 256; i++)
     {
-        idt_set_gate(i, (uint32_t)irq_table[i], 0x10, 0x8E);
+        idt_set_gate(i, (uint32_t)irq_dummy_table[i], 0x10, 0x8E);
     }
 
     __asm__ volatile ("sti");

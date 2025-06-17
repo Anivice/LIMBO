@@ -9,8 +9,8 @@ concatenate_files(head.bin bootsec.bin loader.bin)
 fill_space_with_empty_sectors(head.bin head.resized.bin 18) # head is 18 sector in length
 
 set(CMAKE_C_STANDARD 23)
-add_compile_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
-add_link_options(-ffreestanding -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
+add_compile_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
+add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
         -fno-PIE -fno-PIC -no-pie -Wl,-no-pie -march=i386)
 
 include_directories(src/include)
