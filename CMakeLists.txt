@@ -23,6 +23,7 @@ add_library(limbo SHARED src/entry.c
         src/drivers/rtc.c   src/include/rtc.h
         src/include/stdint.h
         src/include/types.h
+        src/drivers/idt.c   src/include/idt.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 

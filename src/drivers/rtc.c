@@ -1,23 +1,26 @@
 #include "rtc.h"
 #include "io.h"
+#include "string.h"
 
-#define RTC_REGISTER_INDEX      ((unsigned short)0x70)
-#define RTC_REGISTER_IO         ((unsigned short)0x71)
-#define RTC_REGISTER_A          ((unsigned short)0x0A)
-#define RTC_REGISTER_B          ((unsigned short)0x0B)
-#define RTC_REGISTER_C          ((unsigned short)0x0C)
-#define RTC_REGISTER_D          ((unsigned short)0x0D)
-#define RTC_REGISTER_SEC        ((unsigned short)0x00)
-#define RTC_REGISTER_MIN        ((unsigned short)0x02)
-#define RTC_REGISTER_HUR        ((unsigned short)0x04)
-#define RTC_REGISTER_WEK        ((unsigned short)0x06)
-#define RTC_REGISTER_DAY        ((unsigned short)0x07)
-#define RTC_REGISTER_MON        ((unsigned short)0x08)
-#define RTC_REGISTER_YER        ((unsigned short)0x09)
-#define I8259_IMR               ((unsigned short)0xA1)
-#define MASTER_8259             ((unsigned short)0x20)
-#define SLAVE_8259              ((unsigned short)0xA0)
-#define EOI                     ((unsigned short)0x20)
+#define RTC_REGISTER_INDEX      (0x70)
+#define RTC_REGISTER_IO         (0x71)
+#define RTC_REGISTER_A          (0x0A)
+#define RTC_REGISTER_B          (0x0B)
+#define RTC_REGISTER_C          (0x0C)
+#define RTC_REGISTER_D          (0x0D)
+#define RTC_REGISTER_SEC        (0x00)
+#define RTC_REGISTER_MIN        (0x02)
+#define RTC_REGISTER_HUR        (0x04)
+#define RTC_REGISTER_WEK        (0x06)
+#define RTC_REGISTER_DAY        (0x07)
+#define RTC_REGISTER_MON        (0x08)
+#define RTC_REGISTER_YER        (0x09)
+#define I8259_IMR               (0xA1)
+#define MASTER_8259             (0x20)
+#define SLAVE_8259              (0xA0)
+#define EOI                     (0x20)
+
+void rtc_irq_handler(void);
 
 void rtc_irq_init(void)
 {
@@ -127,18 +130,18 @@ __attribute__((naked))
 void rtc_irq_handler(void)
 {
     __asm__ volatile(
-        "   pusha                           \n\t"
-        "   mov     $0x0C,      %al         \n\t"
-        "   out     %al,        $0x70       \n\t"
-        "   in      $0x71,      %al         \n\t"
-        "   movb    $0x20,      %al         \n\t"
-        "   out     %al,        $0xA0       \n\t"
-        "   out     %al,        $0x20       \n\t"
-        "   xor     %eax,       %eax        \n\t"
-        "   mov     uptime,     %eax        \n\t"
-        "   inc     %eax                    \n\t"
-        "   mov     %eax,       uptime      \n\t"
-        "   popa                            \n\t"
-        "   iret                            \n\t"
+        "   pusha                                           \n\t"
+        "   mov     $0x0C,              %al                 \n\t"
+        "   out     %al,                $0x70               \n\t"
+        "   in      $0x71,              %al                 \n\t"
+        "   movb    $0x20,              %al                 \n\t"
+        "   out     %al,                $0xA0               \n\t"
+        "   out     %al,                $0x20               \n\t"
+        "   xor     %eax,               %eax                \n\t"
+        "   mov     "str(uptime)",      %eax                \n\t"
+        "   inc     %eax                                    \n\t"
+        "   mov     %eax,               "str(uptime)"       \n\t"
+        "   popa                                            \n\t"
+        "   iret                                            \n\t"
     );
 }

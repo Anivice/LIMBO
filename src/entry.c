@@ -25,6 +25,7 @@
 #include "printk.h"
 #include "rtc.h"
 #include "stdint.h"
+#include "idt.h"
 
 /*!
  * @brief Enable FPU
@@ -40,6 +41,35 @@ static void enable_fpu(void)
     __asm__ volatile ("fninit");     /* initialise x87 state */
 }
 
+__attribute__((naked))
+void iret_stub(void)
+{
+    __asm__ volatile ("iret");
+}
+
+static void install_irq(void)
+{
+    idt_descriptor.limit = sizeof(idt) - 1;
+    idt_descriptor.base = (uint32_t)&idt;
+
+    __asm__ volatile (
+        "   cli                                     \n\t"
+        "   lidt        (%%eax)                     \n\t"
+        : : "a"((uint32_t)&idt_descriptor) : "memory"
+    );
+
+    for (int i = 0; i < 256; i++)
+    {
+        idt[i].offset_low = ((uint32_t)(void*)iret_stub) & 0xFFFF;
+        idt[i].offset_high = ((uint32_t)(void*)iret_stub) >> 16;
+        idt[i].selector = 0x10; // #2, flat 4GB
+        idt[i].zero = 0;
+        idt[i].type_attr = 0x8E;
+    }
+
+    __asm__ volatile ("sti");
+}
+
 /*!
  * @brief Kernel entry point and stage dispatcher.
  * This function is responsible for invoking different dispatchers to finish the boot sequence.
@@ -51,6 +81,7 @@ __attribute__((section(".kernel_entry_point")))
 void main()
 {
     enable_fpu();
+    install_irq();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
     uptime = 5521;
     printk("%d\n", uptime);

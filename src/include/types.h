@@ -12,4 +12,10 @@ typedef struct {
     uint64_t offset_high:16;    // upper 16 bits of handler address
 } __attribute__((packed)) idt_entry_t;
 
+typedef struct
+{
+    uint16_t limit;
+    uint32_t base;
+} __attribute__((packed)) idt_descriptor_t;
+
 #endif //TYPES_H
