@@ -1,4 +1,7 @@
 # LIMBO
+![Lines of Code](https://img.shields.io/badge/ProjectLines-4717-cyan)
+![Size of Code](https://img.shields.io/badge/ProjectSize-165%20K-yellow)
+
 LIMBO, or Little I386 Microkernel Baremetal Operating-system,
 is a proof-of-concept 32bit baremetal operating system.
 
