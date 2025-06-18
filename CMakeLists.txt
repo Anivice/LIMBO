@@ -48,6 +48,8 @@ add_library(limbo SHARED src/entry.c
         src/drivers/irq.c       src/include/irq.h
         src/basic/die.c         src/include/die.h
         src/basic/backtracer.c  src/include/backtracer.h
+        src/basic/page.c        src/include/page.h
+        src/basic/syscall.c     src/include/syscall.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)
@@ -63,7 +65,9 @@ concatenate_files(boot.bin head.resized.bin limbo.bin)
 add_dependencies(concatenate_file_boot.bin head.bin_RESIZE) # file merge needs head to be resized first
 fill_space_with_empty_sectors(boot.bin boot.img 2880) # 1.44MB floppy disk
 
+add_asm_target(helps/user.asm)
+fill_space_with_empty_sectors(user.bin disk.img 2)
 include(cmake/qemu.cmake)
-add_emulation_target(boot boot.img dummy)
+add_emulation_target(boot boot.img disk.img)
 add_dependencies(boot FormKernel)
 add_dependencies(boot_debug FormKernel)

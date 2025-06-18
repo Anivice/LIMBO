@@ -48,6 +48,36 @@ typedef struct stackframe_t__ {
     uint32_t eip;                   // return address (saved EIP)
 } stackframe_t;
 
+/// Page pointer
+typedef struct page_t__ {
+    uint32_t P:1;               // Present
+    uint32_t RW:1;              // Read/Write 0 means Read-only
+    uint32_t US:1;              // User/Supervisor 0 means DPL=3 would be denied
+    uint32_t PWT:1;             // Page-level Write-Through
+    uint32_t PCD:1;             // Page-level Cache Disable
+    uint32_t A:1;               // Accessed, set by CPU, used as indicator for swap
+    uint32_t D:1;               // Dirty, set by CPU, means it wrote data to the page, used as async cache flush indicator
+    uint32_t PAT:1;             // Page Attribute Table, for more complicated paging
+    uint32_t G:1;               // Global, used in high speed cache. Global means page will always be inside high speed cache
+    uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
+    uint32_t page_base:20;      // Page base address
+} page_t;
+
+/// Page directory pointer
+typedef struct page_dir_t__ {
+    uint32_t P:1;               // Present
+    uint32_t RW:1;              // Read/Write 0 means Read-only
+    uint32_t US:1;              // User/Supervisor 0 means DPL=3 would be denied
+    uint32_t PWT:1;             // Page-level Write-Through
+    uint32_t PCD:1;             // Page-level Cache Disable
+    uint32_t A:1;               // Accessed, set by CPU, used as indicator for swap
+    uint32_t D:1;               // Dirty, set by CPU, means it wrote data to the page, used as async cache flush indicator
+    uint32_t ___reserved_0__:1; // ignored, and always 0
+    uint32_t G:1;               // Global, used in high speed cache. Global means page will always be inside high speed cache
+    uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
+    uint32_t page_dir_base:20;  // Page directory base address
+} page_dir_t;
+
 /*!
  * @brief Escape actions denoted by escape code '%'
  */

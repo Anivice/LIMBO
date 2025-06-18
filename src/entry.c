@@ -27,6 +27,8 @@
 #include "types.h"
 #include "irq.h"
 #include "die.h"
+#include "ide.h"
+#include "syscall.h"
 
 /*!
  * @brief Enable FPU
@@ -70,11 +72,12 @@ static void install_irq(void)
  */
 [[noreturn]]
 __attribute__((section(".kernel_entry_point")))
-void main()
+void main(void)
 {
     enable_fpu();
     install_irq();
     rtc_irq_init();
+    init_syscall();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
     // report on CPU
@@ -95,6 +98,10 @@ void main()
     {
         printk("CPU: %s\n", (const char*)&result.ebx);
     }
+
+    char * p = (char*)0x200000;
+    (void)disk_read(p, 0, 1);
+    __asm__ volatile ("ljmpl $0x10, $0x200000");
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point!");

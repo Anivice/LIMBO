@@ -67,6 +67,7 @@ static void scroll_one_line()
  */
 void putc(const char c, const uint8_t attr)
 {
+    if (!c) return;
     uint16_t cursor_pos = get_cursor_loc();
 
     if (c == '\r')
