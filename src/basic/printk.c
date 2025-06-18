@@ -55,7 +55,7 @@ static void scroll_one_line()
         "pop        %%edi                               \n\t"
         :
         :
-        : "memory"
+        : "memory", "cc"
         );
 }
 
@@ -89,10 +89,10 @@ void putc(const char c, const uint8_t attr)
 
     if (c == '\n')
     {
-        if (cursor_pos % 80 != 0) {
-            const uint16_t new_index = (cursor_pos / 80) * 80 + 80;
-            set_cursor_loc(new_index);
-        }
+        // if (cursor_pos % 80 != 0) {
+        const uint16_t new_index = (cursor_pos / 80) * 80 + 80;
+        set_cursor_loc(new_index);
+        // }
 
         return;
     }

@@ -30,7 +30,7 @@ void out8(const uint16_t port, const uint8_t value)
         "outb   %%al,   %%dx        \n\t"
         :
         : "Nd"(port), "a"(value)
-        : "memory"
+        : "cc"
     );
 }
 
@@ -40,7 +40,7 @@ void out16(const uint16_t port, const uint16_t value)
         "outw   %%ax,   %%dx        \n\t"
         :
         : "Nd"(port), "a"(value)
-        : "memory"
+        : "cc"
     );
 }
 
@@ -52,7 +52,7 @@ void in8(const uint16_t port, uint8_t *value)
         "inb    %%dx,   %%al        \n\t"
         : "=a"(result)
         : "Nd"(port), "0"(value)
-        : "memory"
+        : "cc"
     );
 
     *value = result;
@@ -66,7 +66,7 @@ void in16(const uint16_t port, uint16_t *value)
         "inw    %%dx,   %%ax        \n\t"
         : "=a"(result)
         : "Nd"(port), "0"(value)
-        : "memory"
+        : "cc"
     );
 
     *value = result;

@@ -51,7 +51,7 @@ static void install_irq(void)
     __asm__ volatile (
         "   cli                                     \n\t"
         "   lidt        (%%eax)                     \n\t"
-        : : "a"((uint32_t)&idt_descriptor) : "memory"
+        : : "a"((uint32_t)&idt_descriptor) : "memory", "cc"
     );
 
     for (int i = 0; i < 256; i++)
@@ -76,8 +76,26 @@ void main()
     install_irq();
     rtc_irq_init();
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-    printk("%N");
-    printk("Uptime: %Ds, UNIX timestamp: %U\r", uptime, read_rtc());
-    printk("%n");
+
+    // report on CPU
+    struct {
+        uint32_t eax;
+        uint32_t ebx;
+        uint32_t edx;
+        uint32_t ecx;
+        uint32_t zero;
+    } result = {};
+    __asm__ volatile
+    (
+        "xor %%eax, %%eax   \n\t"
+        "cpuid              \n\t"
+        : "=a"(result.eax), "=b"(result.ebx), "=c"(result.ecx), "=d"(result.edx) ::
+    );
+    if (result.eax != 0)
+    {
+        printk("CPU: %s\n", (const char*)&result.ebx);
+    }
+
+    /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point!");
 }

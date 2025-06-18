@@ -75,8 +75,8 @@ void die(const char * str)
         offset += sprintf(frame_trace_literal_buffer + offset, sizeof(frame_trace_literal_buffer), "%s (0x%x)\n", name_buffer, symbol);
     }
 
-    printk(""
-        "--------------------------------- KERNEL PANIC ---------------------------------\n"
+    printk("\n\n"
+        "--------------------------------- KERNEL PANIC ---------------------------------"
         "> %s\n"
         "TIME: uptime: %Ds, UNIX timestamp: %U\n"
         "STACKTRACE:\n"
