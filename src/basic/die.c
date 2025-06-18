@@ -2,11 +2,9 @@
 #include "string.h"
 #include "rtc.h"
 #include "printk.h"
-#include "backtracer.h"
+#include "../include/backtracer.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-uint32_t backtrace(uint32_t *addrs, uint32_t max_frames);
 
 /*!
  * Get the current symbol table entry, and move the entry pointer to the next symbol
@@ -15,10 +13,10 @@ uint32_t backtrace(uint32_t *addrs, uint32_t max_frames);
  * @param symbol_max Symbol literal buffer size
  * @return Symbol address
  */
-uint32_t query_map(char ** sysmap_ptr, char * symbol_literal, uint32_t symbol_max)
+uint32_t query_map(char ** sysmap_ptr, char * symbol_literal, const uint32_t symbol_max)
 {
-    int literal_off = 0;
-    uint32_t *sysmap_symbol_ip = (uint32_t *)*sysmap_ptr;
+    uint32_t literal_off = 0;
+    const uint32_t *sysmap_symbol_ip = (uint32_t *)*sysmap_ptr;
     char * symbol = (*sysmap_ptr + 4);
     while (*symbol != 0x0a)
     {
@@ -81,7 +79,7 @@ void die(const char * str)
         "--------------------------------- KERNEL PANIC ---------------------------------\n"
         "> %s\n"
         "TIME: uptime: %Ds, UNIX timestamp: %U\n"
-        "STACKFRAME BACKTRACE:\n"
+        "STACKTRACE:\n"
         "%s"
         "--------------------------------------------------------------------------------",
         str, uptime, read_rtc(), frame_trace_literal_buffer);

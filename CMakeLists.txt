@@ -51,6 +51,7 @@ add_library(limbo SHARED src/entry.c
 )
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)
+target_include_directories(limbo PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
 
 execute_process(COMMAND sh -c "git log | head -n 1 | awk '{ print $NF }' | head -c 8"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

@@ -1,264 +1,262 @@
 #include "irq.h"
-#include "printk.h"
+#include "die.h"
 
-#define prefix() put('I'); put('R'); put('Q'); put(' ');
-
-__attribute__((naked)) void irq_dummy_0() { prefix(); put('0'); put('0'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_1() { prefix(); put('0'); put('0'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_2() { prefix(); put('0'); put('0'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_3() { prefix(); put('0'); put('0'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_4() { prefix(); put('0'); put('0'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_5() { prefix(); put('0'); put('0'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_6() { prefix(); put('0'); put('0'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_7() { prefix(); put('0'); put('0'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_8() { prefix(); put('0'); put('0'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_9() { prefix(); put('0'); put('0'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_10() { prefix(); put('0'); put('1'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_11() { prefix(); put('0'); put('1'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_12() { prefix(); put('0'); put('1'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_13() { prefix(); put('0'); put('1'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_14() { prefix(); put('0'); put('1'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_15() { prefix(); put('0'); put('1'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_16() { prefix(); put('0'); put('1'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_17() { prefix(); put('0'); put('1'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_18() { prefix(); put('0'); put('1'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_19() { prefix(); put('0'); put('1'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_20() { prefix(); put('0'); put('2'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_21() { prefix(); put('0'); put('2'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_22() { prefix(); put('0'); put('2'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_23() { prefix(); put('0'); put('2'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_24() { prefix(); put('0'); put('2'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_25() { prefix(); put('0'); put('2'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_26() { prefix(); put('0'); put('2'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_27() { prefix(); put('0'); put('2'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_28() { prefix(); put('0'); put('2'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_29() { prefix(); put('0'); put('2'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_30() { prefix(); put('0'); put('3'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_31() { prefix(); put('0'); put('3'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_32() { prefix(); put('0'); put('3'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_33() { prefix(); put('0'); put('3'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_34() { prefix(); put('0'); put('3'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_35() { prefix(); put('0'); put('3'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_36() { prefix(); put('0'); put('3'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_37() { prefix(); put('0'); put('3'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_38() { prefix(); put('0'); put('3'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_39() { prefix(); put('0'); put('3'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_40() { prefix(); put('0'); put('4'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_41() { prefix(); put('0'); put('4'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_42() { prefix(); put('0'); put('4'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_43() { prefix(); put('0'); put('4'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_44() { prefix(); put('0'); put('4'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_45() { prefix(); put('0'); put('4'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_46() { prefix(); put('0'); put('4'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_47() { prefix(); put('0'); put('4'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_48() { prefix(); put('0'); put('4'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_49() { prefix(); put('0'); put('4'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_50() { prefix(); put('0'); put('5'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_51() { prefix(); put('0'); put('5'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_52() { prefix(); put('0'); put('5'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_53() { prefix(); put('0'); put('5'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_54() { prefix(); put('0'); put('5'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_55() { prefix(); put('0'); put('5'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_56() { prefix(); put('0'); put('5'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_57() { prefix(); put('0'); put('5'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_58() { prefix(); put('0'); put('5'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_59() { prefix(); put('0'); put('5'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_60() { prefix(); put('0'); put('6'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_61() { prefix(); put('0'); put('6'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_62() { prefix(); put('0'); put('6'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_63() { prefix(); put('0'); put('6'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_64() { prefix(); put('0'); put('6'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_65() { prefix(); put('0'); put('6'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_66() { prefix(); put('0'); put('6'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_67() { prefix(); put('0'); put('6'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_68() { prefix(); put('0'); put('6'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_69() { prefix(); put('0'); put('6'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_70() { prefix(); put('0'); put('7'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_71() { prefix(); put('0'); put('7'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_72() { prefix(); put('0'); put('7'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_73() { prefix(); put('0'); put('7'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_74() { prefix(); put('0'); put('7'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_75() { prefix(); put('0'); put('7'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_76() { prefix(); put('0'); put('7'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_77() { prefix(); put('0'); put('7'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_78() { prefix(); put('0'); put('7'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_79() { prefix(); put('0'); put('7'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_80() { prefix(); put('0'); put('8'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_81() { prefix(); put('0'); put('8'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_82() { prefix(); put('0'); put('8'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_83() { prefix(); put('0'); put('8'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_84() { prefix(); put('0'); put('8'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_85() { prefix(); put('0'); put('8'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_86() { prefix(); put('0'); put('8'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_87() { prefix(); put('0'); put('8'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_88() { prefix(); put('0'); put('8'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_89() { prefix(); put('0'); put('8'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_90() { prefix(); put('0'); put('9'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_91() { prefix(); put('0'); put('9'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_92() { prefix(); put('0'); put('9'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_93() { prefix(); put('0'); put('9'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_94() { prefix(); put('0'); put('9'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_95() { prefix(); put('0'); put('9'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_96() { prefix(); put('0'); put('9'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_97() { prefix(); put('0'); put('9'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_98() { prefix(); put('0'); put('9'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_99() { prefix(); put('0'); put('9'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_100() { prefix(); put('1'); put('0'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_101() { prefix(); put('1'); put('0'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_102() { prefix(); put('1'); put('0'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_103() { prefix(); put('1'); put('0'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_104() { prefix(); put('1'); put('0'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_105() { prefix(); put('1'); put('0'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_106() { prefix(); put('1'); put('0'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_107() { prefix(); put('1'); put('0'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_108() { prefix(); put('1'); put('0'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_109() { prefix(); put('1'); put('0'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_110() { prefix(); put('1'); put('1'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_111() { prefix(); put('1'); put('1'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_112() { prefix(); put('1'); put('1'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_113() { prefix(); put('1'); put('1'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_114() { prefix(); put('1'); put('1'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_115() { prefix(); put('1'); put('1'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_116() { prefix(); put('1'); put('1'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_117() { prefix(); put('1'); put('1'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_118() { prefix(); put('1'); put('1'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_119() { prefix(); put('1'); put('1'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_120() { prefix(); put('1'); put('2'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_121() { prefix(); put('1'); put('2'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_122() { prefix(); put('1'); put('2'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_123() { prefix(); put('1'); put('2'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_124() { prefix(); put('1'); put('2'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_125() { prefix(); put('1'); put('2'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_126() { prefix(); put('1'); put('2'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_127() { prefix(); put('1'); put('2'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_128() { prefix(); put('1'); put('2'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_129() { prefix(); put('1'); put('2'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_130() { prefix(); put('1'); put('3'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_131() { prefix(); put('1'); put('3'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_132() { prefix(); put('1'); put('3'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_133() { prefix(); put('1'); put('3'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_134() { prefix(); put('1'); put('3'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_135() { prefix(); put('1'); put('3'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_136() { prefix(); put('1'); put('3'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_137() { prefix(); put('1'); put('3'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_138() { prefix(); put('1'); put('3'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_139() { prefix(); put('1'); put('3'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_140() { prefix(); put('1'); put('4'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_141() { prefix(); put('1'); put('4'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_142() { prefix(); put('1'); put('4'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_143() { prefix(); put('1'); put('4'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_144() { prefix(); put('1'); put('4'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_145() { prefix(); put('1'); put('4'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_146() { prefix(); put('1'); put('4'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_147() { prefix(); put('1'); put('4'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_148() { prefix(); put('1'); put('4'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_149() { prefix(); put('1'); put('4'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_150() { prefix(); put('1'); put('5'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_151() { prefix(); put('1'); put('5'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_152() { prefix(); put('1'); put('5'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_153() { prefix(); put('1'); put('5'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_154() { prefix(); put('1'); put('5'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_155() { prefix(); put('1'); put('5'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_156() { prefix(); put('1'); put('5'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_157() { prefix(); put('1'); put('5'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_158() { prefix(); put('1'); put('5'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_159() { prefix(); put('1'); put('5'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_160() { prefix(); put('1'); put('6'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_161() { prefix(); put('1'); put('6'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_162() { prefix(); put('1'); put('6'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_163() { prefix(); put('1'); put('6'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_164() { prefix(); put('1'); put('6'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_165() { prefix(); put('1'); put('6'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_166() { prefix(); put('1'); put('6'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_167() { prefix(); put('1'); put('6'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_168() { prefix(); put('1'); put('6'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_169() { prefix(); put('1'); put('6'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_170() { prefix(); put('1'); put('7'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_171() { prefix(); put('1'); put('7'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_172() { prefix(); put('1'); put('7'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_173() { prefix(); put('1'); put('7'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_174() { prefix(); put('1'); put('7'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_175() { prefix(); put('1'); put('7'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_176() { prefix(); put('1'); put('7'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_177() { prefix(); put('1'); put('7'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_178() { prefix(); put('1'); put('7'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_179() { prefix(); put('1'); put('7'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_180() { prefix(); put('1'); put('8'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_181() { prefix(); put('1'); put('8'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_182() { prefix(); put('1'); put('8'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_183() { prefix(); put('1'); put('8'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_184() { prefix(); put('1'); put('8'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_185() { prefix(); put('1'); put('8'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_186() { prefix(); put('1'); put('8'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_187() { prefix(); put('1'); put('8'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_188() { prefix(); put('1'); put('8'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_189() { prefix(); put('1'); put('8'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_190() { prefix(); put('1'); put('9'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_191() { prefix(); put('1'); put('9'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_192() { prefix(); put('1'); put('9'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_193() { prefix(); put('1'); put('9'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_194() { prefix(); put('1'); put('9'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_195() { prefix(); put('1'); put('9'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_196() { prefix(); put('1'); put('9'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_197() { prefix(); put('1'); put('9'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_198() { prefix(); put('1'); put('9'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_199() { prefix(); put('1'); put('9'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_200() { prefix(); put('2'); put('0'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_201() { prefix(); put('2'); put('0'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_202() { prefix(); put('2'); put('0'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_203() { prefix(); put('2'); put('0'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_204() { prefix(); put('2'); put('0'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_205() { prefix(); put('2'); put('0'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_206() { prefix(); put('2'); put('0'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_207() { prefix(); put('2'); put('0'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_208() { prefix(); put('2'); put('0'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_209() { prefix(); put('2'); put('0'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_210() { prefix(); put('2'); put('1'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_211() { prefix(); put('2'); put('1'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_212() { prefix(); put('2'); put('1'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_213() { prefix(); put('2'); put('1'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_214() { prefix(); put('2'); put('1'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_215() { prefix(); put('2'); put('1'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_216() { prefix(); put('2'); put('1'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_217() { prefix(); put('2'); put('1'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_218() { prefix(); put('2'); put('1'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_219() { prefix(); put('2'); put('1'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_220() { prefix(); put('2'); put('2'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_221() { prefix(); put('2'); put('2'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_222() { prefix(); put('2'); put('2'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_223() { prefix(); put('2'); put('2'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_224() { prefix(); put('2'); put('2'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_225() { prefix(); put('2'); put('2'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_226() { prefix(); put('2'); put('2'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_227() { prefix(); put('2'); put('2'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_228() { prefix(); put('2'); put('2'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_229() { prefix(); put('2'); put('2'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_230() { prefix(); put('2'); put('3'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_231() { prefix(); put('2'); put('3'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_232() { prefix(); put('2'); put('3'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_233() { prefix(); put('2'); put('3'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_234() { prefix(); put('2'); put('3'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_235() { prefix(); put('2'); put('3'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_236() { prefix(); put('2'); put('3'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_237() { prefix(); put('2'); put('3'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_238() { prefix(); put('2'); put('3'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_239() { prefix(); put('2'); put('3'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_240() { prefix(); put('2'); put('4'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_241() { prefix(); put('2'); put('4'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_242() { prefix(); put('2'); put('4'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_243() { prefix(); put('2'); put('4'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_244() { prefix(); put('2'); put('4'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_245() { prefix(); put('2'); put('4'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_246() { prefix(); put('2'); put('4'); put('6'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_247() { prefix(); put('2'); put('4'); put('7'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_248() { prefix(); put('2'); put('4'); put('8'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_249() { prefix(); put('2'); put('4'); put('9'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_250() { prefix(); put('2'); put('5'); put('0'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_251() { prefix(); put('2'); put('5'); put('1'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_252() { prefix(); put('2'); put('5'); put('2'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_253() { prefix(); put('2'); put('5'); put('3'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_254() { prefix(); put('2'); put('5'); put('4'); put('\n'); __asm__ __volatile__("iret"); }
-__attribute__((naked)) void irq_dummy_255() { prefix(); put('2'); put('5'); put('5'); put('\n'); __asm__ __volatile__("iret"); }
+__attribute__((naked)) void irq_dummy_0() { die("IRQ 000"); }
+__attribute__((naked)) void irq_dummy_1() { die("IRQ 001"); }
+__attribute__((naked)) void irq_dummy_2() { die("IRQ 002"); }
+__attribute__((naked)) void irq_dummy_3() { die("IRQ 003"); }
+__attribute__((naked)) void irq_dummy_4() { die("IRQ 004"); }
+__attribute__((naked)) void irq_dummy_5() { die("IRQ 005"); }
+__attribute__((naked)) void irq_dummy_6() { die("IRQ 006"); }
+__attribute__((naked)) void irq_dummy_7() { die("IRQ 007"); }
+__attribute__((naked)) void irq_dummy_8() { die("IRQ 008"); }
+__attribute__((naked)) void irq_dummy_9() { die("IRQ 009"); }
+__attribute__((naked)) void irq_dummy_10() { die("IRQ 010"); }
+__attribute__((naked)) void irq_dummy_11() { die("IRQ 011"); }
+__attribute__((naked)) void irq_dummy_12() { die("IRQ 012"); }
+__attribute__((naked)) void irq_dummy_13() { die("IRQ 013"); }
+__attribute__((naked)) void irq_dummy_14() { die("IRQ 014"); }
+__attribute__((naked)) void irq_dummy_15() { die("IRQ 015"); }
+__attribute__((naked)) void irq_dummy_16() { die("IRQ 016"); }
+__attribute__((naked)) void irq_dummy_17() { die("IRQ 017"); }
+__attribute__((naked)) void irq_dummy_18() { die("IRQ 018"); }
+__attribute__((naked)) void irq_dummy_19() { die("IRQ 019"); }
+__attribute__((naked)) void irq_dummy_20() { die("IRQ 020"); }
+__attribute__((naked)) void irq_dummy_21() { die("IRQ 021"); }
+__attribute__((naked)) void irq_dummy_22() { die("IRQ 022"); }
+__attribute__((naked)) void irq_dummy_23() { die("IRQ 023"); }
+__attribute__((naked)) void irq_dummy_24() { die("IRQ 024"); }
+__attribute__((naked)) void irq_dummy_25() { die("IRQ 025"); }
+__attribute__((naked)) void irq_dummy_26() { die("IRQ 026"); }
+__attribute__((naked)) void irq_dummy_27() { die("IRQ 027"); }
+__attribute__((naked)) void irq_dummy_28() { die("IRQ 028"); }
+__attribute__((naked)) void irq_dummy_29() { die("IRQ 029"); }
+__attribute__((naked)) void irq_dummy_30() { die("IRQ 030"); }
+__attribute__((naked)) void irq_dummy_31() { die("IRQ 031"); }
+__attribute__((naked)) void irq_dummy_32() { die("IRQ 032"); }
+__attribute__((naked)) void irq_dummy_33() { die("IRQ 033"); }
+__attribute__((naked)) void irq_dummy_34() { die("IRQ 034"); }
+__attribute__((naked)) void irq_dummy_35() { die("IRQ 035"); }
+__attribute__((naked)) void irq_dummy_36() { die("IRQ 036"); }
+__attribute__((naked)) void irq_dummy_37() { die("IRQ 037"); }
+__attribute__((naked)) void irq_dummy_38() { die("IRQ 038"); }
+__attribute__((naked)) void irq_dummy_39() { die("IRQ 039"); }
+__attribute__((naked)) void irq_dummy_40() { die("IRQ 040"); }
+__attribute__((naked)) void irq_dummy_41() { die("IRQ 041"); }
+__attribute__((naked)) void irq_dummy_42() { die("IRQ 042"); }
+__attribute__((naked)) void irq_dummy_43() { die("IRQ 043"); }
+__attribute__((naked)) void irq_dummy_44() { die("IRQ 044"); }
+__attribute__((naked)) void irq_dummy_45() { die("IRQ 045"); }
+__attribute__((naked)) void irq_dummy_46() { die("IRQ 046"); }
+__attribute__((naked)) void irq_dummy_47() { die("IRQ 047"); }
+__attribute__((naked)) void irq_dummy_48() { die("IRQ 048"); }
+__attribute__((naked)) void irq_dummy_49() { die("IRQ 049"); }
+__attribute__((naked)) void irq_dummy_50() { die("IRQ 050"); }
+__attribute__((naked)) void irq_dummy_51() { die("IRQ 051"); }
+__attribute__((naked)) void irq_dummy_52() { die("IRQ 052"); }
+__attribute__((naked)) void irq_dummy_53() { die("IRQ 053"); }
+__attribute__((naked)) void irq_dummy_54() { die("IRQ 054"); }
+__attribute__((naked)) void irq_dummy_55() { die("IRQ 055"); }
+__attribute__((naked)) void irq_dummy_56() { die("IRQ 056"); }
+__attribute__((naked)) void irq_dummy_57() { die("IRQ 057"); }
+__attribute__((naked)) void irq_dummy_58() { die("IRQ 058"); }
+__attribute__((naked)) void irq_dummy_59() { die("IRQ 059"); }
+__attribute__((naked)) void irq_dummy_60() { die("IRQ 060"); }
+__attribute__((naked)) void irq_dummy_61() { die("IRQ 061"); }
+__attribute__((naked)) void irq_dummy_62() { die("IRQ 062"); }
+__attribute__((naked)) void irq_dummy_63() { die("IRQ 063"); }
+__attribute__((naked)) void irq_dummy_64() { die("IRQ 064"); }
+__attribute__((naked)) void irq_dummy_65() { die("IRQ 065"); }
+__attribute__((naked)) void irq_dummy_66() { die("IRQ 066"); }
+__attribute__((naked)) void irq_dummy_67() { die("IRQ 067"); }
+__attribute__((naked)) void irq_dummy_68() { die("IRQ 068"); }
+__attribute__((naked)) void irq_dummy_69() { die("IRQ 069"); }
+__attribute__((naked)) void irq_dummy_70() { die("IRQ 070"); }
+__attribute__((naked)) void irq_dummy_71() { die("IRQ 071"); }
+__attribute__((naked)) void irq_dummy_72() { die("IRQ 072"); }
+__attribute__((naked)) void irq_dummy_73() { die("IRQ 073"); }
+__attribute__((naked)) void irq_dummy_74() { die("IRQ 074"); }
+__attribute__((naked)) void irq_dummy_75() { die("IRQ 075"); }
+__attribute__((naked)) void irq_dummy_76() { die("IRQ 076"); }
+__attribute__((naked)) void irq_dummy_77() { die("IRQ 077"); }
+__attribute__((naked)) void irq_dummy_78() { die("IRQ 078"); }
+__attribute__((naked)) void irq_dummy_79() { die("IRQ 079"); }
+__attribute__((naked)) void irq_dummy_80() { die("IRQ 080"); }
+__attribute__((naked)) void irq_dummy_81() { die("IRQ 081"); }
+__attribute__((naked)) void irq_dummy_82() { die("IRQ 082"); }
+__attribute__((naked)) void irq_dummy_83() { die("IRQ 083"); }
+__attribute__((naked)) void irq_dummy_84() { die("IRQ 084"); }
+__attribute__((naked)) void irq_dummy_85() { die("IRQ 085"); }
+__attribute__((naked)) void irq_dummy_86() { die("IRQ 086"); }
+__attribute__((naked)) void irq_dummy_87() { die("IRQ 087"); }
+__attribute__((naked)) void irq_dummy_88() { die("IRQ 088"); }
+__attribute__((naked)) void irq_dummy_89() { die("IRQ 089"); }
+__attribute__((naked)) void irq_dummy_90() { die("IRQ 090"); }
+__attribute__((naked)) void irq_dummy_91() { die("IRQ 091"); }
+__attribute__((naked)) void irq_dummy_92() { die("IRQ 092"); }
+__attribute__((naked)) void irq_dummy_93() { die("IRQ 093"); }
+__attribute__((naked)) void irq_dummy_94() { die("IRQ 094"); }
+__attribute__((naked)) void irq_dummy_95() { die("IRQ 095"); }
+__attribute__((naked)) void irq_dummy_96() { die("IRQ 096"); }
+__attribute__((naked)) void irq_dummy_97() { die("IRQ 097"); }
+__attribute__((naked)) void irq_dummy_98() { die("IRQ 098"); }
+__attribute__((naked)) void irq_dummy_99() { die("IRQ 099"); }
+__attribute__((naked)) void irq_dummy_100() { die("IRQ 100"); }
+__attribute__((naked)) void irq_dummy_101() { die("IRQ 101"); }
+__attribute__((naked)) void irq_dummy_102() { die("IRQ 102"); }
+__attribute__((naked)) void irq_dummy_103() { die("IRQ 103"); }
+__attribute__((naked)) void irq_dummy_104() { die("IRQ 104"); }
+__attribute__((naked)) void irq_dummy_105() { die("IRQ 105"); }
+__attribute__((naked)) void irq_dummy_106() { die("IRQ 106"); }
+__attribute__((naked)) void irq_dummy_107() { die("IRQ 107"); }
+__attribute__((naked)) void irq_dummy_108() { die("IRQ 108"); }
+__attribute__((naked)) void irq_dummy_109() { die("IRQ 109"); }
+__attribute__((naked)) void irq_dummy_110() { die("IRQ 110"); }
+__attribute__((naked)) void irq_dummy_111() { die("IRQ 111"); }
+__attribute__((naked)) void irq_dummy_112() { die("IRQ 112"); }
+__attribute__((naked)) void irq_dummy_113() { die("IRQ 113"); }
+__attribute__((naked)) void irq_dummy_114() { die("IRQ 114"); }
+__attribute__((naked)) void irq_dummy_115() { die("IRQ 115"); }
+__attribute__((naked)) void irq_dummy_116() { die("IRQ 116"); }
+__attribute__((naked)) void irq_dummy_117() { die("IRQ 117"); }
+__attribute__((naked)) void irq_dummy_118() { die("IRQ 118"); }
+__attribute__((naked)) void irq_dummy_119() { die("IRQ 119"); }
+__attribute__((naked)) void irq_dummy_120() { die("IRQ 120"); }
+__attribute__((naked)) void irq_dummy_121() { die("IRQ 121"); }
+__attribute__((naked)) void irq_dummy_122() { die("IRQ 122"); }
+__attribute__((naked)) void irq_dummy_123() { die("IRQ 123"); }
+__attribute__((naked)) void irq_dummy_124() { die("IRQ 124"); }
+__attribute__((naked)) void irq_dummy_125() { die("IRQ 125"); }
+__attribute__((naked)) void irq_dummy_126() { die("IRQ 126"); }
+__attribute__((naked)) void irq_dummy_127() { die("IRQ 127"); }
+__attribute__((naked)) void irq_dummy_128() { die("IRQ 128"); }
+__attribute__((naked)) void irq_dummy_129() { die("IRQ 129"); }
+__attribute__((naked)) void irq_dummy_130() { die("IRQ 130"); }
+__attribute__((naked)) void irq_dummy_131() { die("IRQ 131"); }
+__attribute__((naked)) void irq_dummy_132() { die("IRQ 132"); }
+__attribute__((naked)) void irq_dummy_133() { die("IRQ 133"); }
+__attribute__((naked)) void irq_dummy_134() { die("IRQ 134"); }
+__attribute__((naked)) void irq_dummy_135() { die("IRQ 135"); }
+__attribute__((naked)) void irq_dummy_136() { die("IRQ 136"); }
+__attribute__((naked)) void irq_dummy_137() { die("IRQ 137"); }
+__attribute__((naked)) void irq_dummy_138() { die("IRQ 138"); }
+__attribute__((naked)) void irq_dummy_139() { die("IRQ 139"); }
+__attribute__((naked)) void irq_dummy_140() { die("IRQ 140"); }
+__attribute__((naked)) void irq_dummy_141() { die("IRQ 141"); }
+__attribute__((naked)) void irq_dummy_142() { die("IRQ 142"); }
+__attribute__((naked)) void irq_dummy_143() { die("IRQ 143"); }
+__attribute__((naked)) void irq_dummy_144() { die("IRQ 144"); }
+__attribute__((naked)) void irq_dummy_145() { die("IRQ 145"); }
+__attribute__((naked)) void irq_dummy_146() { die("IRQ 146"); }
+__attribute__((naked)) void irq_dummy_147() { die("IRQ 147"); }
+__attribute__((naked)) void irq_dummy_148() { die("IRQ 148"); }
+__attribute__((naked)) void irq_dummy_149() { die("IRQ 149"); }
+__attribute__((naked)) void irq_dummy_150() { die("IRQ 150"); }
+__attribute__((naked)) void irq_dummy_151() { die("IRQ 151"); }
+__attribute__((naked)) void irq_dummy_152() { die("IRQ 152"); }
+__attribute__((naked)) void irq_dummy_153() { die("IRQ 153"); }
+__attribute__((naked)) void irq_dummy_154() { die("IRQ 154"); }
+__attribute__((naked)) void irq_dummy_155() { die("IRQ 155"); }
+__attribute__((naked)) void irq_dummy_156() { die("IRQ 156"); }
+__attribute__((naked)) void irq_dummy_157() { die("IRQ 157"); }
+__attribute__((naked)) void irq_dummy_158() { die("IRQ 158"); }
+__attribute__((naked)) void irq_dummy_159() { die("IRQ 159"); }
+__attribute__((naked)) void irq_dummy_160() { die("IRQ 160"); }
+__attribute__((naked)) void irq_dummy_161() { die("IRQ 161"); }
+__attribute__((naked)) void irq_dummy_162() { die("IRQ 162"); }
+__attribute__((naked)) void irq_dummy_163() { die("IRQ 163"); }
+__attribute__((naked)) void irq_dummy_164() { die("IRQ 164"); }
+__attribute__((naked)) void irq_dummy_165() { die("IRQ 165"); }
+__attribute__((naked)) void irq_dummy_166() { die("IRQ 166"); }
+__attribute__((naked)) void irq_dummy_167() { die("IRQ 167"); }
+__attribute__((naked)) void irq_dummy_168() { die("IRQ 168"); }
+__attribute__((naked)) void irq_dummy_169() { die("IRQ 169"); }
+__attribute__((naked)) void irq_dummy_170() { die("IRQ 170"); }
+__attribute__((naked)) void irq_dummy_171() { die("IRQ 171"); }
+__attribute__((naked)) void irq_dummy_172() { die("IRQ 172"); }
+__attribute__((naked)) void irq_dummy_173() { die("IRQ 173"); }
+__attribute__((naked)) void irq_dummy_174() { die("IRQ 174"); }
+__attribute__((naked)) void irq_dummy_175() { die("IRQ 175"); }
+__attribute__((naked)) void irq_dummy_176() { die("IRQ 176"); }
+__attribute__((naked)) void irq_dummy_177() { die("IRQ 177"); }
+__attribute__((naked)) void irq_dummy_178() { die("IRQ 178"); }
+__attribute__((naked)) void irq_dummy_179() { die("IRQ 179"); }
+__attribute__((naked)) void irq_dummy_180() { die("IRQ 180"); }
+__attribute__((naked)) void irq_dummy_181() { die("IRQ 181"); }
+__attribute__((naked)) void irq_dummy_182() { die("IRQ 182"); }
+__attribute__((naked)) void irq_dummy_183() { die("IRQ 183"); }
+__attribute__((naked)) void irq_dummy_184() { die("IRQ 184"); }
+__attribute__((naked)) void irq_dummy_185() { die("IRQ 185"); }
+__attribute__((naked)) void irq_dummy_186() { die("IRQ 186"); }
+__attribute__((naked)) void irq_dummy_187() { die("IRQ 187"); }
+__attribute__((naked)) void irq_dummy_188() { die("IRQ 188"); }
+__attribute__((naked)) void irq_dummy_189() { die("IRQ 189"); }
+__attribute__((naked)) void irq_dummy_190() { die("IRQ 190"); }
+__attribute__((naked)) void irq_dummy_191() { die("IRQ 191"); }
+__attribute__((naked)) void irq_dummy_192() { die("IRQ 192"); }
+__attribute__((naked)) void irq_dummy_193() { die("IRQ 193"); }
+__attribute__((naked)) void irq_dummy_194() { die("IRQ 194"); }
+__attribute__((naked)) void irq_dummy_195() { die("IRQ 195"); }
+__attribute__((naked)) void irq_dummy_196() { die("IRQ 196"); }
+__attribute__((naked)) void irq_dummy_197() { die("IRQ 197"); }
+__attribute__((naked)) void irq_dummy_198() { die("IRQ 198"); }
+__attribute__((naked)) void irq_dummy_199() { die("IRQ 199"); }
+__attribute__((naked)) void irq_dummy_200() { die("IRQ 200"); }
+__attribute__((naked)) void irq_dummy_201() { die("IRQ 201"); }
+__attribute__((naked)) void irq_dummy_202() { die("IRQ 202"); }
+__attribute__((naked)) void irq_dummy_203() { die("IRQ 203"); }
+__attribute__((naked)) void irq_dummy_204() { die("IRQ 204"); }
+__attribute__((naked)) void irq_dummy_205() { die("IRQ 205"); }
+__attribute__((naked)) void irq_dummy_206() { die("IRQ 206"); }
+__attribute__((naked)) void irq_dummy_207() { die("IRQ 207"); }
+__attribute__((naked)) void irq_dummy_208() { die("IRQ 208"); }
+__attribute__((naked)) void irq_dummy_209() { die("IRQ 209"); }
+__attribute__((naked)) void irq_dummy_210() { die("IRQ 210"); }
+__attribute__((naked)) void irq_dummy_211() { die("IRQ 211"); }
+__attribute__((naked)) void irq_dummy_212() { die("IRQ 212"); }
+__attribute__((naked)) void irq_dummy_213() { die("IRQ 213"); }
+__attribute__((naked)) void irq_dummy_214() { die("IRQ 214"); }
+__attribute__((naked)) void irq_dummy_215() { die("IRQ 215"); }
+__attribute__((naked)) void irq_dummy_216() { die("IRQ 216"); }
+__attribute__((naked)) void irq_dummy_217() { die("IRQ 217"); }
+__attribute__((naked)) void irq_dummy_218() { die("IRQ 218"); }
+__attribute__((naked)) void irq_dummy_219() { die("IRQ 219"); }
+__attribute__((naked)) void irq_dummy_220() { die("IRQ 220"); }
+__attribute__((naked)) void irq_dummy_221() { die("IRQ 221"); }
+__attribute__((naked)) void irq_dummy_222() { die("IRQ 222"); }
+__attribute__((naked)) void irq_dummy_223() { die("IRQ 223"); }
+__attribute__((naked)) void irq_dummy_224() { die("IRQ 224"); }
+__attribute__((naked)) void irq_dummy_225() { die("IRQ 225"); }
+__attribute__((naked)) void irq_dummy_226() { die("IRQ 226"); }
+__attribute__((naked)) void irq_dummy_227() { die("IRQ 227"); }
+__attribute__((naked)) void irq_dummy_228() { die("IRQ 228"); }
+__attribute__((naked)) void irq_dummy_229() { die("IRQ 229"); }
+__attribute__((naked)) void irq_dummy_230() { die("IRQ 230"); }
+__attribute__((naked)) void irq_dummy_231() { die("IRQ 231"); }
+__attribute__((naked)) void irq_dummy_232() { die("IRQ 232"); }
+__attribute__((naked)) void irq_dummy_233() { die("IRQ 233"); }
+__attribute__((naked)) void irq_dummy_234() { die("IRQ 234"); }
+__attribute__((naked)) void irq_dummy_235() { die("IRQ 235"); }
+__attribute__((naked)) void irq_dummy_236() { die("IRQ 236"); }
+__attribute__((naked)) void irq_dummy_237() { die("IRQ 237"); }
+__attribute__((naked)) void irq_dummy_238() { die("IRQ 238"); }
+__attribute__((naked)) void irq_dummy_239() { die("IRQ 239"); }
+__attribute__((naked)) void irq_dummy_240() { die("IRQ 240"); }
+__attribute__((naked)) void irq_dummy_241() { die("IRQ 241"); }
+__attribute__((naked)) void irq_dummy_242() { die("IRQ 242"); }
+__attribute__((naked)) void irq_dummy_243() { die("IRQ 243"); }
+__attribute__((naked)) void irq_dummy_244() { die("IRQ 244"); }
+__attribute__((naked)) void irq_dummy_245() { die("IRQ 245"); }
+__attribute__((naked)) void irq_dummy_246() { die("IRQ 246"); }
+__attribute__((naked)) void irq_dummy_247() { die("IRQ 247"); }
+__attribute__((naked)) void irq_dummy_248() { die("IRQ 248"); }
+__attribute__((naked)) void irq_dummy_249() { die("IRQ 249"); }
+__attribute__((naked)) void irq_dummy_250() { die("IRQ 250"); }
+__attribute__((naked)) void irq_dummy_251() { die("IRQ 251"); }
+__attribute__((naked)) void irq_dummy_252() { die("IRQ 252"); }
+__attribute__((naked)) void irq_dummy_253() { die("IRQ 253"); }
+__attribute__((naked)) void irq_dummy_254() { die("IRQ 254"); }
+__attribute__((naked)) void irq_dummy_255() { die("IRQ 255"); }
 
 void * irq_dummy_table[256];
 

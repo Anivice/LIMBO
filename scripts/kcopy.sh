@@ -27,8 +27,9 @@ dd if=/dev/zero bs=$data_short count=1 >> "/tmp/data.${seed}.raw" 2>/dev/null
 cat "/tmp/map.${seed}.raw" >> /tmp/data."${seed}".raw
 dd if=/dev/zero bs=$map_short count=1 >> "/tmp/data.${seed}.raw" 2>/dev/null
 
-printf "Kernel code space usage %0.2f%% ($code_size bytes), data space usage %0.2f%% ($data_size + $map_size bytes)\n" \
-    "$(echo "scale=4; $code_size / 491136 * 100" | bc)" "$(echo "scale=4; ($data_size + $map_size) / 122752 * 100" | bc)"
+printf "Kernel code space usage %0.2f%% ($code_size bytes), data space usage %0.2f%% (data:$data_size [%0.2f%%] + symbol:$map_size [%0.2f%%] bytes)\n" \
+    "$(echo "scale=4; $code_size / 491136 * 100" | bc)" "$(echo "scale=4; ($data_size + $map_size) / 122752 * 100" | bc)" \
+    "$(echo "scale=4; $data_size / 89984 * 100" | bc)" "$(echo "scale=4; $map_size / 32768 * 100" | bc)"
 printf "System map resides at address 0x%X\n" "$(echo "$(printf "%d" 0x00177E80)" + 89984 | bc)"
 
 cat "/tmp/code.${seed}.raw" "/tmp/data.${seed}.raw" > "$OUT"
