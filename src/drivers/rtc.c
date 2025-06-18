@@ -22,6 +22,7 @@
 
 volatile uint64_t uptime;
 
+/// Interrupt service routine for RTC
 __attribute__((naked))
 void rtc_irq_handler(void)
 {
@@ -76,6 +77,11 @@ uint8_t read_rtc_register(uint16_t index)
     return data;
 }
 
+/*!
+ * Convert BCD to binary numeric
+ * @param data Packed BCD
+ * @return Binary numeric
+ */
 [[nodiscard]]
 uint8_t bcd_to_numeric(const uint8_t data)
 {
@@ -89,8 +95,18 @@ uint8_t bcd_to_numeric(const uint8_t data)
     return numeric;
 }
 
+/*!
+ * Convert YYYY-MM-DD:mm:hh:ss to UNIX Timestamp
+ * @param year Year
+ * @param month Month
+ * @param day Day
+ * @param hour Hour
+ * @param minute Minute
+ * @param second Second
+ * @return UNIX Timestamp
+ */
 uint64_t unix_timestamp(const uint32_t year, const uint32_t month, const uint32_t day,
-                                  const uint32_t hour, const uint32_t minute, const uint32_t second)
+                        const uint32_t hour, const uint32_t minute, const uint32_t second)
 {
     // Days in each month for a non-leap year
     static const uint32_t mdays[12] = {
@@ -98,12 +114,12 @@ uint64_t unix_timestamp(const uint32_t year, const uint32_t month, const uint32_
     };
 
     uint64_t days = 0ULL;
-    uint64_t y = (uint64_t)year - 1ULL;  // year-1 for leap year calculation
+    const uint64_t y = (uint64_t)year - 1ULL;   // year-1 for leap year calculation
 
     // Add days for all years from 1970 up to the year before the given year
     days += (uint64_t)(year - 1970) * 365ULL;
-    days += (y / 4ULL) - (y / 100ULL) + (y / 400ULL)      // leap days up to year-1
-          - (1969ULL / 4ULL - 1969ULL / 100ULL + 1969ULL / 400ULL);  // leap days up to 1969
+    days += (y / 4ULL) - (y / 100ULL) + (y / 400ULL)                // leap days up to year-1
+          - (1969ULL / 4ULL - 1969ULL / 100ULL + 1969ULL / 400ULL); // leap days up to 1969
 
     // Add days for all months in the given year before the given month
     for (uint32_t m = 1; m < month; ++m) {

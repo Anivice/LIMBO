@@ -49,7 +49,10 @@ void set_cursor_loc(uint16_t loc);
  */
 void write_to_video_memory(char c, uint32_t loc, uint8_t attr);
 
+/// Hide cursor
 void cursor_hide();
+
+/// Show cursor
 void cursor_show();
 
 #endif //GPU_H

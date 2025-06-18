@@ -17,6 +17,7 @@
 #define IDE_ERR                     ((uint8_t)0x01)
 #define ATA_CMD_CACHE_FLUSH         ((uint8_t)0xE7)
 
+/// Get error code from IDE controller
 int get_disk_err_code()
 {
     uint8_t err = 0;

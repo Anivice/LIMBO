@@ -17,8 +17,36 @@ void memcpy(void * dest, const void * src, const uint32_t size)
     }
 }
 
-int memcmp(const void * s1, const void * s2, uint32_t n);
+int memcmp(const void * s1, const void * s2, uint32_t n)
+{
+    int32_t sum_s1 = 0, sum_s2 = 0;
+    bool is_same = true;
+    for (uint32_t i = 0; i < n; i++)
+    {
+        sum_s1 += ((char*)s1)[i];
+        sum_s2 += ((char*)s2)[i];
+        if (((char*)s1)[i] != ((char*)s2)[i])
+        {
+            is_same = false;
+        }
+    }
 
+    if (is_same)
+    {
+        return 0;
+    }
+
+    return (sum_s1 - sum_s2);
+}
+
+/*!
+ * @brief Print a character to buffer
+ * @param c Character
+ * @param buffer String buffer
+ * @param offset Current string offset
+ * @param buffer_len Buffer max length
+ * @return NONE
+ */
 void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     if (*offset + 1 < buffer_len)
@@ -30,7 +58,7 @@ void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t buffer
 }
 
 /*!
- * @brief Print unsigned number on screen
+ * @brief Print unsigned number to buffer
  * @param num Unsigned number
  * @param base16 Is base16 mode active
  * @param buffer String buffer
@@ -70,7 +98,7 @@ void sprint_num(uint64_t num, const bool base16, char * buffer, uint32_t * offse
 }
 
 /*!
- * @brief Print signed number on screen
+ * @brief Print signed number to buffer, for 32bit
  * @param num Signed number
  * @param buffer String buffer
  * @param offset Current string offset
@@ -88,6 +116,13 @@ void sprint_signed(int num, char * buffer, uint32_t * offset, const uint32_t buf
     sprint_num(unsigned_num, false, buffer, offset, buffer_len);
 }
 
+/*!
+ * @brief Print signed number to buffer, for 64bit
+ * @param num Signed number
+ * @param buffer String buffer
+ * @param offset Current string offset
+ * @return NONE
+ */
 void sprint_64bit_signed(int64_t num, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     uint64_t unsigned_num = *(uint64_t*)&num;
@@ -156,8 +191,6 @@ void sprint_double(double value, const int precision, char * buffer, uint32_t * 
     }
 }
 
-
-
 /*!
  * @brief Translate escape code into meaningful actions
  * @param code Escape code
@@ -182,6 +215,7 @@ void sputs(const char *str, char * buffer, uint32_t * offset, const uint32_t buf
 
 uint32_t sprintf(char *buffer, const uint32_t buffer_length, const char * fmt, ...)
 {
+    if (!fmt) return 0;
     __builtin_va_list ap;
     __builtin_va_start(ap, fmt);
 

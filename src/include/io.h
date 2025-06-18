@@ -66,6 +66,12 @@ void in16(uint16_t port, uint16_t *value);
  */
 uint8_t inb(uint16_t port);
 
+/*!
+ * @brief output an 8 bit value to a port
+ * @param port Port
+ * @param value Value
+ * @returns Nothing
+ */
 #define outb(port, value) out8(port, value)
 
 #endif //IO_H

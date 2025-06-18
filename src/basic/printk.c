@@ -339,6 +339,7 @@ void puts(const char *str, const uint8_t attr)
 
 void printk(const char * fmt, ...)
 {
+    if (!fmt) return;
     __builtin_va_list ap;
     __builtin_va_start(ap, fmt);
 

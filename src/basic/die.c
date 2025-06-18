@@ -8,6 +8,13 @@
 
 uint32_t backtrace(uint32_t *addrs, uint32_t max_frames);
 
+/*!
+ * Get the current symbol table entry, and move the entry pointer to the next symbol
+ * @param sysmap_ptr Current symbol map pointer
+ * @param symbol_literal Symbol literal buffer
+ * @param symbol_max Symbol literal buffer size
+ * @return Symbol address
+ */
 uint32_t query_map(char ** sysmap_ptr, char * symbol_literal, uint32_t symbol_max)
 {
     int literal_off = 0;
@@ -26,6 +33,13 @@ uint32_t query_map(char ** sysmap_ptr, char * symbol_literal, uint32_t symbol_ma
     return *sysmap_symbol_ip;
 }
 
+/*!
+ * Interpret symbol by currently provided stackframe
+ * @param frame Current stacktrace
+ * @param sym_ptr Symbol entry buffer
+ * @param sym_name Symbol name(literal) buffer
+ * @param sym_name_max Symbol name buffer size
+ */
 void get_symbol(const uint32_t frame, uint32_t * sym_ptr, char * sym_name, const uint32_t sym_name_max)
 {
     char buffer[32] = { };

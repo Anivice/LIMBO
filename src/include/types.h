@@ -1,9 +1,33 @@
+/*!
+ * @file types.h
+ *
+ * @copyright
+ * Copyright 2025 Anivice Ives
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * @brief This file defines multiple types
+ **/
+
 #ifndef TYPES_H
 #define TYPES_H
 
 #include "stdint.h"
 
-/* IDT entry for 32-bit interrupt gates */
+/// IDT entry for 32-bit interrupt gates
 typedef struct idt_entry_t__ {
     uint64_t offset_low:16;     // lower 16 bits of handler address
     uint64_t selector:16;       // code segment selector in GDT/LDT
@@ -12,14 +36,16 @@ typedef struct idt_entry_t__ {
     uint64_t offset_high:16;    // upper 16 bits of handler address
 } idt_entry_t;
 
+/// IDT Register
 typedef struct idt_descriptor_t__ {
-    uint16_t limit;
-    uint32_t base;
+    uint16_t limit;                 // IDT boundary
+    uint32_t base;                  // IDT linear base
 } __attribute__((packed)) idt_descriptor_t;
 
+/// Stack frame
 typedef struct stackframe_t__ {
-    struct stackframe_t__ *ebp;   // saved EBP of caller
-    uint32_t eip;             // return address (saved EIP)
+    struct stackframe_t__ *ebp;     // saved EBP of caller
+    uint32_t eip;                   // return address (saved EIP)
 } stackframe_t;
 
 /*!
