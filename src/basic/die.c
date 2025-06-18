@@ -27,8 +27,7 @@
 #include "rtc.h"
 #include "printk.h"
 #include "../include/backtracer.h"
-
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#include "../include/marco.h"
 
 /*!
  * Get the current symbol table entry, and move the entry pointer to the next symbol
@@ -68,7 +67,7 @@ void get_symbol(const uint32_t frame, uint32_t * sym_ptr, char * sym_name, const
     char symbol_literal[32] = { };
     uint32_t result;
     char * sysmap;
-    *(uint32_t*)(&sysmap) = 0x18DE00;
+    *(uint32_t*)(&sysmap) = (uint32_t)SYSTEM_SYMBOL_MAP;
     uint32_t symbol = 0;
     do
     {

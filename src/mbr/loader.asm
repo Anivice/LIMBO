@@ -342,8 +342,15 @@ _entry_point: ; _entry_point()
     mov         si,                     40              ; descriptor is at fs:40
     call        set_descriptor
 
+    ; #6, LDT segment
+    mov         eax,                    0x29F80         ; baseline: 0x29F80
+    mov         ebx,                    127             ; limit: 127B
+    mov         ecx,                    0000_1000_0010B ; Attribute: 0x82
+    mov         si,                     48              ; descriptor is at fs:48
+    call        set_descriptor
+
     ; GDT descriptor:
-    mov word    [gdt_boundary],         6 * 8 - 1       ; table boundary for 5 entries
+    mov word    [gdt_boundary],         7 * 8 - 1       ; table boundary for 5 entries
     xor         eax,                    eax
     mov         ax,                     fs              ; table base
     shl         eax,                    4               ; convert to linear address
@@ -730,7 +737,7 @@ prepare_to_move_kernel: db "[LIMBO LOADER]: Move kernel data from 0x9E00-0x9FBFF
 done:   db "done.", 0x0A, 0x00
 
 align 16, db 0
-gdt: resb 64
+gdt: resb 128
 
 gdt_boundary: dw 0
 gdt_base: dd 0

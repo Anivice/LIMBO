@@ -58,5 +58,5 @@ int32_t syscall_req_dispatcher(
 
 void init_syscall (void)
 {
-    idt_set_gate(0x80, (uint32_t)(void*)isr_0x80, 0x10, 0x8E);
+    idt_set_gate(0x80, (uint32_t)(void*)isr_0x80, 0x10, 0xEE);
 }

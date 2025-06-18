@@ -36,7 +36,8 @@ add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -s
 )
 
 include_directories(src/include)
-add_library(limbo SHARED src/entry.c
+add_library(limbo SHARED
+        src/entry.c             src/include/marco.h
         src/drivers/gpu.c       src/include/gpu.h
         src/drivers/io.c        src/include/io.h
         src/basic/printk.c      src/include/printk.h
@@ -50,6 +51,7 @@ add_library(limbo SHARED src/entry.c
         src/basic/backtracer.c  src/include/backtracer.h
         src/basic/page.c        src/include/page.h
         src/basic/syscall.c     src/include/syscall.h
+        src/basic/ldt.c         src/include/ldt.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)

@@ -22,6 +22,7 @@
  * @brief This file defines entry point from assembly second stage loader
  **/
 
+#include "string.h"
 #include "printk.h"
 #include "rtc.h"
 #include "types.h"
@@ -29,6 +30,8 @@
 #include "die.h"
 #include "ide.h"
 #include "syscall.h"
+#include "marco.h"
+#include "ldt.h"
 
 /*!
  * @brief Enable FPU
@@ -101,7 +104,21 @@ void main(void)
 
     char * p = (char*)0x200000;
     (void)disk_read(p, 0, 1);
-    __asm__ volatile ("ljmpl $0x10, $0x200000");
+    segment_descriptor_t * descriptor = LOCAL_DESCRIPTOR_TABLE;
+    memset(descriptor, 0, sizeof(segment_descriptor_t));
+    descriptor[1] = make_descriptor(0, 0xFFFFF, 0xCFA);
+    descriptor[2] = make_descriptor(0, 0xFFFFF, 0xCF2);
+
+
+    __asm__ volatile(
+        "pushw $0x17        \n\t" // ess
+        "pushl $0x200FFF    \n\t" // esp
+        "pushl $0x202         \n\t" // eflags
+        "pushw $0x0F        \n\t" // cs
+        "pushl $0x200000    \n\t" // eip
+        :::"memory");
+    __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
+    __asm__ volatile ("iret");
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point!");

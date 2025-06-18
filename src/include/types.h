@@ -48,6 +48,29 @@ typedef struct stackframe_t__ {
     uint32_t eip;                   // return address (saved EIP)
 } stackframe_t;
 
+/// Segment Descriptor
+typedef struct segment_descriptor_t__ {
+    uint16_t limit_0_15;
+    uint16_t base_0_15;
+    uint8_t base_16_23;
+    uint8_t type_attr:4;
+    uint8_t S:1;
+    uint8_t DPL:2;
+    uint8_t P:1;
+    uint8_t limit_16_19:4;
+    uint8_t AVL:1;
+    uint8_t L:1;
+    uint8_t DB:1;
+    uint8_t G:1;
+    uint8_t base_24_31;
+} segment_descriptor_t;
+
+/// Local Description Table
+typedef struct ldt_descriptor_t__ {
+    uint16_t limit;
+    uint32_t base;
+} __attribute__((packed)) ldt_descriptor_t;
+
 /// Page pointer
 typedef struct page_t__ {
     uint32_t P:1;               // Present
