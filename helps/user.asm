@@ -10,5 +10,6 @@
     xor ebp, ebp
 
     int 0x80
+    hlt
     popa
     jmp $

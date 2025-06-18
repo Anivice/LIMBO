@@ -3,6 +3,8 @@
 
 #define LOCAL_DESCRIPTOR_TABLE         ((void*)(0x29F80))
 #define LOCAL_DESCRIPTOR_TABLE_LIMIT   (127)
+#define TASK_STATE_SEGMENT             ((void*)(0x29F10))
+#define TASK_STATE_LIMIT               (103)
 #define SYSTEM_SYMBOL_MAP              ((void*)(0x18DE00))
 #define MIN(a, b)                      (((a) < (b)) ? (a) : (b))
 

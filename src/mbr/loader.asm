@@ -349,8 +349,15 @@ _entry_point: ; _entry_point()
     mov         si,                     48              ; descriptor is at fs:48
     call        set_descriptor
 
+    ; #7, TSS segment
+    mov         eax,                    0x29F10         ; baseline: 0x29F10
+    mov         ebx,                    103             ; limit: 103 B
+    mov         ecx,                    0000_1000_1001B ; Attribute:
+    mov         si,                     56              ; descriptor is at fs:56
+    call        set_descriptor
+
     ; GDT descriptor:
-    mov word    [gdt_boundary],         7 * 8 - 1       ; table boundary for 5 entries
+    mov word    [gdt_boundary],         8 * 8 - 1       ; table boundary for 5 entries
     xor         eax,                    eax
     mov         ax,                     fs              ; table base
     shl         eax,                    4               ; convert to linear address

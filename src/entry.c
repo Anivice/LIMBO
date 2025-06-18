@@ -67,6 +67,31 @@ static void install_irq(void)
     __asm__ volatile ("sti");
 }
 
+typedef struct __attribute__((packed)) int_frame_privchg {
+    uint32_t eip;
+    uint32_t cs;
+    uint32_t eflags;
+    uint32_t user_esp;
+    uint32_t user_ss;
+} int_frame_privchg_t;
+
+__attribute__((naked))           /* suppress C prologue/epilogue */
+void build_and_iret(int_frame_privchg_t *f)
+{
+    __asm__ __volatile__ (
+        "mov  4(%esp), %eax \n\t"   /* eax = pointer to frame      */
+        "pushl 16(%eax)     \n\t"   /* SS  */
+        "pushl 12(%eax)     \n\t"   /* ESP */
+        "pushl  8(%eax)     \n\t"   /* EFLAGS */
+        "pushl  4(%eax)     \n\t"   /* CS  */
+        "pushl  0(%eax)     \n\t"   /* EIP */
+    );
+
+    __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
+    __asm__ volatile("ltr %%ax" :: "a"(0x38):"cc", "memory");
+    __asm__ volatile ("iret");
+}
+
 /*!
  * @brief Kernel entry point and stage dispatcher.
  * This function is responsible for invoking different dispatchers to finish the boot sequence.
@@ -106,19 +131,29 @@ void main(void)
     (void)disk_read(p, 0, 1);
     segment_descriptor_t * descriptor = LOCAL_DESCRIPTOR_TABLE;
     memset(descriptor, 0, sizeof(segment_descriptor_t));
-    descriptor[1] = make_descriptor(0, 0xFFFFF, 0xCFA);
-    descriptor[2] = make_descriptor(0, 0xFFFFF, 0xCF2);
+    descriptor[1] = make_descriptor(0, 0x000FFFFF, 0xFA, 0xC0);
+    descriptor[2] = make_descriptor(0, 0x000FFFFF, 0xF2, 0xC0);
 
+    tss_descriptor_t * tss = TASK_STATE_SEGMENT;
+    uint32_t helper = 0;
+    __asm__ volatile ("mov %%ds, %%eax" : "=a"(helper) ::);
+    tss->ss0 = helper;
+    __asm__ volatile ("mov %%esp, %%eax" : "=a"(helper) ::);
+    tss->esp0 = helper;
+    tss->iomap_base = sizeof(*tss);
+    tss->eip = (uint32_t)0x200000;
+    __asm__ volatile ("mov %%cs, %%eax" : "=a"(helper) ::);
+    tss->cs = helper;
 
-    __asm__ volatile(
-        "pushw $0x17        \n\t" // ess
-        "pushl $0x200FFF    \n\t" // esp
-        "pushl $0x202         \n\t" // eflags
-        "pushw $0x0F        \n\t" // cs
-        "pushl $0x200000    \n\t" // eip
-        :::"memory");
-    __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
-    __asm__ volatile ("iret");
+    int_frame_privchg_t frame = {
+        .eip = (uint32_t)0x200000,
+        .cs = 0xF,
+        .eflags = 0x202,
+        .user_esp = (uint32_t)0x200FFF,
+        .user_ss = (uint32_t)0x17,
+    };
+
+    build_and_iret(&frame);
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point!");

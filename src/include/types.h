@@ -49,20 +49,13 @@ typedef struct stackframe_t__ {
 } stackframe_t;
 
 /// Segment Descriptor
-typedef struct segment_descriptor_t__ {
+typedef struct __attribute__((packed)) {
     uint16_t limit_0_15;
     uint16_t base_0_15;
-    uint8_t base_16_23;
-    uint8_t type_attr:4;
-    uint8_t S:1;
-    uint8_t DPL:2;
-    uint8_t P:1;
-    uint8_t limit_16_19:4;
-    uint8_t AVL:1;
-    uint8_t L:1;
-    uint8_t DB:1;
-    uint8_t G:1;
-    uint8_t base_24_31;
+    uint8_t  base_16_23;
+    uint8_t  access;          /* full access byte */
+    uint8_t  limit_flags;     /* limit[19:16] | flags */
+    uint8_t  base_24_31;
 } segment_descriptor_t;
 
 /// Local Description Table
@@ -70,6 +63,48 @@ typedef struct ldt_descriptor_t__ {
     uint16_t limit;
     uint32_t base;
 } __attribute__((packed)) ldt_descriptor_t;
+
+typedef struct tss_descriptor_t__
+{
+    uint32_t prev_tss:16;
+    uint32_t __reserved_0:16;
+    uint32_t esp0;
+    uint32_t ss0:16;
+    uint32_t __reserved_1:16;
+    uint32_t esp1;
+    uint32_t ss1:16;
+    uint32_t __reserved_2:16;
+    uint32_t esp2;
+    uint32_t ss2:16;
+    uint32_t __reserved_3:16;
+    uint32_t cr3;
+    uint32_t eip;
+    uint32_t eflags;
+    uint32_t eax;
+    uint32_t ecx;
+    uint32_t edx;
+    uint32_t ebx;
+    uint32_t esp;
+    uint32_t ebp;
+    uint32_t esi;
+    uint32_t edi;
+    uint32_t es:16;
+    uint32_t __reserved_4:16;
+    uint32_t cs:16;
+    uint32_t __reserved_5:16;
+    uint32_t ss:16;
+    uint32_t __reserved_6:16;
+    uint32_t ds:16;
+    uint32_t __reserved_7:16;
+    uint32_t fs:16;
+    uint32_t __reserved_8:16;
+    uint32_t gs:16;
+    uint32_t __reserved_9:16;
+    uint32_t ldt_selector:16;
+    uint32_t __reserved_10:16;
+    uint32_t __reserved_11:16;
+    uint32_t iomap_base:16;
+} __attribute__((packed)) tss_descriptor_t;
 
 /// Page pointer
 typedef struct page_t__ {

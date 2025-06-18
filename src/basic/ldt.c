@@ -1,21 +1,23 @@
 #include "ldt.h"
 #include "types.h"
 
-segment_descriptor_t make_descriptor(const uint32_t base, const uint16_t limit, const uint16_t attr)
+segment_descriptor_t make_descriptor(uint32_t base,
+                                     uint32_t limit,   /* 20-bit   */
+                                     uint16_t access,  /* full 8-bit access
+                                                          + 4 flag bits */
+                                     uint8_t  flags)   /* G | DB | L | AVL */
 {
-    segment_descriptor_t descriptor;
-    descriptor.limit_0_15 = limit & 0xFFFF;
-    descriptor.limit_16_19 = (limit >> 16) & 0xF;
-    descriptor.base_0_15 = base & 0xFFFF;
-    descriptor.base_16_23 = (base >> 16) & 0xFF;
-    descriptor.base_24_31 = (base >> 24) & 0xFF;
-    descriptor.type_attr = attr & 0x0F;
-    descriptor.S = (attr >> 4) & 0x1;
-    descriptor.DPL = (attr >> 5) & 0x3;
-    descriptor.P = (attr >> 7) & 0x1;
-    descriptor.AVL = (attr >> 8) & 0x1;
-    descriptor.L = (attr >> 9) & 0x1;
-    descriptor.DB = (attr >> 10) & 0x1;
-    descriptor.G = (attr >> 11) & 0x1;
-    return descriptor;
+    segment_descriptor_t d;
+
+    /* ----- low 4 bytes ----- */
+    d.limit_0_15   =  limit & 0xFFFF;
+    d.base_0_15    =  base  & 0xFFFF;
+    d.base_16_23   = (base  >> 16) & 0xFF;
+
+    /* ----- high 4 bytes ---- */
+    d.access       =  access & 0xFF;            /* e.g. 0xFA or 0xF2 */
+    d.limit_flags  = ((limit >> 16) & 0x0F) |   /* limit 19-16       */
+                     (flags  & 0xF0);           /* | G/DB/L/AVL      */
+    d.base_24_31   = (base  >> 24) & 0xFF;
+    return d;
 }
