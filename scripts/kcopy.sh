@@ -9,7 +9,7 @@ objcopy -O binary --only-section=.data "$FILE" /tmp/data."${seed}".raw
 read -r -a array <<< "$(objdump -t liblimbo.so | grep ".text" | awk '{print $1, $NF}' | sort | tr '\n' ' ')"
 
 for ((i=0;i<${#array[@]};i+=2)); do
-    echo "${array[i]}" | xxd -r -p >> "/tmp/map.${seed}.raw"
+    echo "${array[i]}" | xxd -r -p | xxd -e | xxd -r >> "/tmp/map.${seed}.raw"
     echo "${array[i+1]}" >> "/tmp/map.${seed}.raw"
 done
 
