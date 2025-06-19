@@ -369,37 +369,37 @@ void printk(const char * fmt, ...)
                 case SET_FONT_COLOR_BLACK: { attr &= 0xF0; break; }
                 case SET_FONT_COLOR_BLUE: {
                     attr &= 0xF0;
-                    attr |= 0x01;
+                    attr |= 0x01 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_GREEN: {
                     attr &= 0xF0;
-                    attr |= 0x02;
+                    attr |= 0x02 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_CYAN: {
                     attr &= 0xF0;
-                    attr |= 0x03;
+                    attr |= 0x03 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_RED: {
                     attr &= 0xF0;
-                    attr |= 0x04;
+                    attr |= 0x04 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_MAGENTA: {
                     attr &= 0xF0;
-                    attr |= 0x05;
+                    attr |= 0x05 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_YELLOW: {
                     attr &= 0xF0;
-                    attr |= 0x06;
+                    attr |= 0x06 | 0x08;
                     break;
                 }
                 case SET_FONT_COLOR_WHITE: {
                     attr &= 0xF0;
-                    attr |= 0x07;
+                    attr |= 0x07 | 0x08;
                     break;
                 }
 

@@ -74,4 +74,7 @@ int memcmp(const void * s1, const void * s2, uint32_t n);
  */
 uint32_t sprintf(char *buffer, uint32_t buffer_length, const char * fmt, ...);
 
+int strlen(const char * s);
+int strnlen(const char * s, int maxlen);
+
 #endif //STRING_H

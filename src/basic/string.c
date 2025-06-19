@@ -339,3 +339,29 @@ uint32_t sprintf(char *buffer, const uint32_t buffer_length, const char * fmt, .
     __builtin_va_end(ap);
     return offset;
 }
+
+int strlen(const char * s)
+{
+    int len = 0;
+    while (s[len] != '\0')
+    {
+        len++;
+    }
+
+    return len;
+}
+
+int strnlen(const char * s, int maxlen)
+{
+    int len = 0;
+    while (s[len] != '\0')
+    {
+        len++;
+        if (len >= maxlen)
+        {
+            return len;
+        }
+    }
+
+    return len;
+}

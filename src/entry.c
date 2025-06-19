@@ -106,6 +106,12 @@ void main(int32_t argc, int32_t *argv)
     uint32_t beyond_16MB = argv[1] * 64 * 1024;
     bool memory_hole = (beyond_16MB != 0) && (below_16MB != 15*1024*1024);
 
+    const char * magic = "Anivice";
+    if (!memcmp(MAGIC, magic, strlen(magic)))
+    {
+        die("Kernel data corrupted");
+    }
+
     enable_fpu();
     install_irq();
     rtc_irq_init();
@@ -131,11 +137,11 @@ void main(int32_t argc, int32_t *argv)
         printk("CPU: %s\n", (const char*)&result.ebx);
     }
 
-    printk("0x000000 - 0x100000: Kernel Cache\n");
-    printk("0x100000 - 0x200000: Kernel Code\n");
+    printk("0x00000000 - 0x00100000: Kernel Cache\n");
+    printk("0x00100000 - 0x00200000: Kernel Code\n");
     if (memory_hole)
     {
-        printk("0x200000 - 0x%x: Main memory\n", below_16MB);
+        printk("0x00200000 - 0x%x: Main memory\n", below_16MB);
         printk("0x%x - 0x%x: Main memory\n", below_16MB, beyond_16MB);
     }
     else
@@ -146,7 +152,7 @@ void main(int32_t argc, int32_t *argv)
 
     if (memory_hole)
     {
-        die("Memory hole in lower 16MB part!\n");
+        die("Memory hole in lower 16MB part");
     }
 
     // char * p = (char*)0x200000;
@@ -178,5 +184,5 @@ void main(int32_t argc, int32_t *argv)
     // build_and_iret(&frame);
 
     /////////////////////////////////////////////////////////////
-    die("Unexpected reach of the end of kernel entry point!");
+    die("Unexpected reach of the end of kernel entry point");
 }

@@ -89,7 +89,7 @@ void die(const char * str)
     uint32_t symbol = 0;
     uint32_t stackframes[64];
     auto const frames = backtrace(stackframes, sizeof(stackframes) / sizeof(stackframes[0]));
-    uint32_t offset = sprintf(frame_trace_literal_buffer, sizeof(frame_trace_literal_buffer), "TRACED %d FRAMES:\n", frames);
+    uint32_t offset = sprintf(frame_trace_literal_buffer, sizeof(frame_trace_literal_buffer), "TRACED %d FRAME(S):\n", frames);
     for (uint32_t i = 0; i < frames; i++)
     {
         offset += sprintf(frame_trace_literal_buffer + offset, sizeof(frame_trace_literal_buffer), " at 0x%x: ", stackframes[i]);
@@ -99,12 +99,12 @@ void die(const char * str)
     }
 
     printk("\n\n"
-        "--------------------------------- KERNEL PANIC ---------------------------------"
-        "> %s\n"
-        "TIME: uptime: %Ds, UNIX timestamp: %U\n"
-        "STACKTRACE:\n"
-        "%s"
-        "--------------------------------------------------------------------------------",
+        "%R%w--------------------------------- KERNEL PANIC ---------------------------------%@"
+        "%aTIME: uptime: %Ds, UNIX timestamp: %U\n"
+        "%rREASON > %s%@\n"
+        "%mSTACKTRACE:\n"
+        "%s%@"
+        "%R%w--------------------------------------------------------------------------------%@",
         str, uptime, read_rtc(), frame_trace_literal_buffer);
     while (1)
     {
