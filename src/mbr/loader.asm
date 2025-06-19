@@ -216,6 +216,35 @@ _entry_point: ; _entry_point()
     mov         si,                     greet
     call        print
 
+    pusha
+	XOR         CX,                     CX
+	XOR         DX,                     DX
+	MOV         AX,                     0xE801
+	INT         0x15		                            ; request upper memory size
+	JC SHORT    .ERR
+	CMP         AH,                     0x86		    ; unsupported function
+	JE SHORT    .ERR
+	CMP         AH,                     0x80		    ; invalid command
+	JE SHORT    .ERR
+	JCXZ        .USEAX		                            ; was the CX result invalid?
+	MOV         AX,                     CX
+	MOV         BX,                     DX
+.USEAX:
+	; AX = number of contiguous Kb, 1M to 16M
+	; BX = contiguous 64Kb pages above 16M
+	mov word    [argv],                 AX
+	mov word    [argv+4],               BX
+	JMP         .END
+.ERR:
+    mov         si,                     memory_err
+    call        print
+    cli
+    .ERR_LOOP:
+        hlt
+    jmp .ERR_LOOP
+.END:
+    popa
+
     mov         ah,                     0x01            ; INT10h, AH=01h -> set cursor shape
     mov         ch,                     0x20            ; start scanline = 32 (beyond 0–15)
     mov         cl,                     0x00            ; end scanline   =   0
@@ -426,6 +455,8 @@ flat_cs_mode:
     mov             eax,                    msg_done
     call            dsprint
 
+    push            edi
+
     ; print 32 bit protected mode loader greeting message
     mov             esi,                    edi
     add             esi,                    greet32
@@ -466,17 +497,26 @@ flat_cs_mode:
     cld
     rep movsb
 
+    pop             edi
+
     ; setup stack space
     mov             eax,                    0x28
     mov             ss,                     eax
     mov             esp,                    0x9FBFF     ; previously 640KB kernel cache
-    xor             eax,                    eax
     xor             ebx,                    ebx
     xor             ecx,                    ecx
     xor             edx,                    edx
     xor             ebp,                    ebp
     xor             esi,                    esi
+
+    mov             eax,                    edi
+    add             eax,                    argv
+    push            eax
+    push dword      2
+
+    xor             eax,                    eax
     xor             edi,                    edi
+    push dword      0x00
     jmp dword       0x0010:0x100000
 
     cli
@@ -733,6 +773,9 @@ fda_nl:  db 0x0D,0x0A, 0x00
 floppy_disk_err:
     db 0x0D, 0x0A, "[LIMBO LOADER FDA]: Read floppy disk A failed, AH=", 0x0D, 0x0A, 0x00
 
+memory_err:
+    db "[LIMBO LOADER]: Cannot obtain memory map", 0x0D, 0x0A, 0x00
+
 greet32:
     db "================================================================================", 0x0A
     db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1         ", 0x0A
@@ -764,6 +807,9 @@ idt_descriptor:
     dw idt_end - idt_start - 1  ; limit = size-1
 idt_descriptor_idt_start:
     dd 0                ; base = linear address of table
+
+argv:
+    resb 16*4
 
 segment _data_tail align=16
 _data_end:

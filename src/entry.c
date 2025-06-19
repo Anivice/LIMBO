@@ -89,7 +89,7 @@ void build_and_iret(int_frame_privchg_t *f)
 
     __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
     __asm__ volatile("ltr %%ax" :: "a"(0x38):"cc", "memory");
-    __asm__ volatile ("iret");
+                               __asm__ volatile ("iret");
 }
 
 /*!
@@ -98,10 +98,14 @@ void build_and_iret(int_frame_privchg_t *f)
  * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
  * @return None, and is marked with [[noreturn]], so no return code is generated for main()
  */
-[[noreturn]]
-__attribute__((section(".kernel_entry_point")))
-void main(void)
+[[noreturn, gnu::section(".kernel_entry_point")]]
+// __attribute__((section(".kernel_entry_point")))
+void main(int32_t argc, int32_t *argv)
 {
+    uint32_t below_16MB = argv[0] * 1024;
+    uint32_t beyond_16MB = argv[1] * 64 * 1024;
+    bool memory_hole = (beyond_16MB != 0) && (below_16MB != 15*1024*1024);
+
     enable_fpu();
     install_irq();
     rtc_irq_init();
@@ -127,33 +131,51 @@ void main(void)
         printk("CPU: %s\n", (const char*)&result.ebx);
     }
 
-    char * p = (char*)0x200000;
-    (void)disk_read(p, 0, 1);
-    segment_descriptor_t * descriptor = LOCAL_DESCRIPTOR_TABLE;
-    memset(descriptor, 0, sizeof(segment_descriptor_t));
-    descriptor[1] = make_descriptor(0, 0x000FFFFF, 0xFA, 0xC0);
-    descriptor[2] = make_descriptor(0, 0x000FFFFF, 0xF2, 0xC0);
+    printk("0x000000 - 0x100000: Kernel Cache\n");
+    printk("0x100000 - 0x200000: Kernel Code\n");
+    if (memory_hole)
+    {
+        printk("0x200000 - 0x%x: Main memory\n", below_16MB);
+        printk("0x%x - 0x%x: Main memory\n", below_16MB, beyond_16MB);
+    }
+    else
+    {
+        printk("0x200000 - 0x%x: Main memory\n", (below_16MB + beyond_16MB + 1024));
+    }
+    printk("System has %d KB memory in total\n", (beyond_16MB + below_16MB + 1024) / 1024);
 
-    tss_descriptor_t * tss = TASK_STATE_SEGMENT;
-    uint32_t helper = 0;
-    __asm__ volatile ("mov %%ds, %%eax" : "=a"(helper) ::);
-    tss->ss0 = helper;
-    __asm__ volatile ("mov %%esp, %%eax" : "=a"(helper) ::);
-    tss->esp0 = helper;
-    tss->iomap_base = sizeof(*tss);
-    tss->eip = (uint32_t)0x200000;
-    __asm__ volatile ("mov %%cs, %%eax" : "=a"(helper) ::);
-    tss->cs = helper;
+    if (memory_hole)
+    {
+        die("Memory hole in lower 16MB part!\n");
+    }
 
-    int_frame_privchg_t frame = {
-        .eip = (uint32_t)0x200000,
-        .cs = 0xF,
-        .eflags = 0x202,
-        .user_esp = (uint32_t)0x200FFF,
-        .user_ss = (uint32_t)0x17,
-    };
-
-    build_and_iret(&frame);
+    // char * p = (char*)0x200000;
+    // (void)disk_read(p, 0, 1);
+    // segment_descriptor_t * descriptor = LOCAL_DESCRIPTOR_TABLE;
+    // memset(descriptor, 0, sizeof(segment_descriptor_t));
+    // descriptor[1] = make_descriptor(0, 0x000FFFFF, 0xFA, 0xC0);
+    // descriptor[2] = make_descriptor(0, 0x000FFFFF, 0xF2, 0xC0);
+    //
+    // tss_descriptor_t * tss = TASK_STATE_SEGMENT;
+    // uint32_t helper = 0;
+    // __asm__ volatile ("mov %%ds, %%eax" : "=a"(helper) ::);
+    // tss->ss0 = helper;
+    // __asm__ volatile ("mov %%esp, %%eax" : "=a"(helper) ::);
+    // tss->esp0 = helper;
+    // tss->iomap_base = sizeof(*tss);
+    // tss->eip = (uint32_t)0x200000;
+    // __asm__ volatile ("mov %%cs, %%eax" : "=a"(helper) ::);
+    // tss->cs = helper;
+    //
+    // int_frame_privchg_t frame = {
+    //     .eip = (uint32_t)0x200000,
+    //     .cs = 0xF,
+    //     .eflags = 0x202,
+    //     .user_esp = (uint32_t)0x200FFF,
+    //     .user_ss = (uint32_t)0x17,
+    // };
+    //
+    // build_and_iret(&frame);
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point!");

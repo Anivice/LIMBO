@@ -119,7 +119,7 @@ typedef struct page_t__ {
     uint32_t G:1;               // Global, used in high speed cache. Global means page will always be inside high speed cache
     uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
     uint32_t page_base:20;      // Page base address
-} page_t;
+} __attribute__((packed)) page_t;
 
 /// Page directory pointer
 typedef struct page_dir_t__ {
@@ -134,7 +134,7 @@ typedef struct page_dir_t__ {
     uint32_t G:1;               // Global, used in high speed cache. Global means page will always be inside high speed cache
     uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
     uint32_t page_dir_base:20;  // Page directory base address
-} page_dir_t;
+} __attribute__((packed)) page_dir_t;
 
 /*!
  * @brief Escape actions denoted by escape code '%'

@@ -17,9 +17,14 @@ code_size=$(stat "/tmp/code.${seed}.raw" --printf=%s)
 data_size=$(stat "/tmp/data.${seed}.raw" --printf=%s)
 map_size=$(stat "/tmp/map.${seed}.raw" --printf=%s)
 
-code_short=$((491136 - code_size))
-data_short=$((89984 - data_size))
-map_short=$((32768 - map_size))
+Scode=491520
+Sdata=89600
+Smap=32768
+DataLoc=0x00178000
+
+code_short=$((Scode - code_size))
+data_short=$((Sdata - data_size))
+map_short=$((Smap - map_size))
 
 dd if=/dev/zero bs=$code_short count=1 >> "/tmp/code.${seed}.raw" 2>/dev/null
 dd if=/dev/zero bs=$data_short count=1 >> "/tmp/data.${seed}.raw" 2>/dev/null
@@ -28,9 +33,9 @@ cat "/tmp/map.${seed}.raw" >> /tmp/data."${seed}".raw
 dd if=/dev/zero bs=$map_short count=1 >> "/tmp/data.${seed}.raw" 2>/dev/null
 
 printf "Kernel code space usage %0.2f%% ($code_size bytes), data space usage %0.2f%% (data:$data_size [%0.2f%%] + symbol:$map_size [%0.2f%%] bytes)\n" \
-    "$(echo "scale=4; $code_size / 491136 * 100" | bc)" "$(echo "scale=4; ($data_size + $map_size) / 122752 * 100" | bc)" \
-    "$(echo "scale=4; $data_size / 89984 * 100" | bc)" "$(echo "scale=4; $map_size / 32768 * 100" | bc)"
-printf "System map resides at address 0x%X\n" "$(echo "$(printf "%d" 0x00177E80)" + 89984 | bc)"
+    "$(echo "scale=4; $code_size / $Scode * 100" | bc)" "$(echo "scale=4; ($data_size + $map_size) / ($Sdata + $Smap) * 100" | bc)" \
+    "$(echo "scale=4; $data_size / $Sdata * 100" | bc)" "$(echo "scale=4; $map_size / $Smap * 100" | bc)"
+printf "System map resides at address 0x%X\n" "$(echo "$(printf "%d" $DataLoc)" + $Sdata | bc)"
 
 cat "/tmp/code.${seed}.raw" "/tmp/data.${seed}.raw" > "$OUT"
 rm "/tmp/code.${seed}.raw" "/tmp/data.${seed}.raw" "/tmp/map.${seed}.raw"
