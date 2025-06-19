@@ -108,6 +108,6 @@ void die(const char * str)
         str, uptime, read_rtc(), frame_trace_literal_buffer);
     while (1)
     {
-        __asm__ __volatile__("hlt");
+        __asm__ __volatile__("cli\n\thlt");
     }
 }
