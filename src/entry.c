@@ -25,7 +25,7 @@
 #include "string.h"
 #include "printk.h"
 #include "rtc.h"
-#include "types.h"
+#include "idt.h"
 #include "irq.h"
 #include "die.h"
 #include "marco.h"
@@ -91,7 +91,8 @@ void install_irq()
  * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
  * @return None, and is marked with [[noreturn]], so no return code is generated for main()
  */
-[[noreturn, gnu::section(".kernel_entry_point"), NO_OPTIMIZATION]]
+[[noreturn, gnu::section(".kernel_entry_point")]]
+NO_PLEASE_DONT_OPTIMIZE
 // __attribute__((section(".kernel_entry_point")))
 void main(const int32_t argc, const int32_t *argv)
 {
@@ -126,6 +127,10 @@ void main(const int32_t argc, const int32_t *argv)
     {
         die("Memory hole in lower 16MB part");
     }
+
+    for (int i = 0; i < 0xFFFFF; i++)
+        for (int j = 0; j < 4096; j++)
+            __asm__ volatile ("nop");
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point");

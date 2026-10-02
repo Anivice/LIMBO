@@ -14,5 +14,6 @@ elif [[ $SHORT -lt 0 ]]; then
     echo "ERROR: $SECTORS * 512 - $FILESIZE == $SHORT < 0"
     exit 1
 else
+    cp "$FILE" "$OFILE" || exit 1
     echo "No resize needed"
 fi

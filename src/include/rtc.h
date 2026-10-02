@@ -26,10 +26,9 @@
 #define RTC_H
 
 #include "stdint.h"
-#include "idt.h"
 
-/// CPU uptime determined by RTC interrupt counter
-extern volatile uint64_t uptime;
+/// get uptime
+uint64_t rtc_get_uptime();
 
 /// initialize RTC
 /// @return NONE

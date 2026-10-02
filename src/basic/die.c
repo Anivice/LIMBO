@@ -105,7 +105,13 @@ void die(const char *reason)
     __asm__ volatile ("cli" ::: "memory");
     printk("\n\n%R%wKERNEL PANIC%@\n%rREASON > %s%@\n",
            reason ? reason : "(no reason)");
-    printk("Current RTC time is: %d, uptime: %d\n", read_rtc(), uptime);
+    uint64_t now = read_rtc();
+    if (now == UINT64_MAX)
+        printk("Current RTC time is unavailable\n");
+    else
+        printk("Current RTC time is: %U\n", now);
+
+    printk("RTC update count: %U\n", rtc_get_uptime());
 
     uint32_t frames[64];
     uint32_t count = backtrace(frames, sizeof(frames) / sizeof(frames[0]));

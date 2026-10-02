@@ -35,6 +35,12 @@ code_short=$((Scode - code_size))
 data_short=$((Sdata - data_size))
 map_short=$((Smap - map_size))
 
+if ((code_short < 0 || data_short < 0 || map_short < 0)); then
+    printf 'ERROR: kernel section exceeds its image slot (code=%s data=%s map=%s)\n' \
+        "$code_size" "$data_size" "$map_size" >&2
+    exit 1
+fi
+
 dd if=/dev/zero bs=$code_short count=1 >> "/tmp/code.${seed}.raw" 2>/dev/null
 dd if=/dev/zero bs=$data_short count=1 >> "/tmp/data.${seed}.raw" 2>/dev/null
 
@@ -47,7 +53,7 @@ printf "Kernel code space usage %0.2f%% ($code_size bytes), data space usage %0.
 printf "\033[32;1mCode resides at address \033[31;1m0x%X\033[32m (%d KB)\033[0m\n" $((1024*1024)) $((Scode/1024))
 printf "\033[33;1mData resides at address \033[31;1m0x%X\033[33m (%d KB)\033[0m\n" $((1024*1024+Scode)) $((Sdata/1024))
 printf "\033[35;1mSmap resides at address \033[31;1m0x%X\033[35m (%d KB)\033[0m\n" "$(echo "$(printf "%d" "$DataLoc")" + $Sdata | bc)" $((Smap/1024))
-printf "\033[36;1mMAGC resides at address 0x%X\033[0m\n" "$(printf "(%d - 7) - 512*18 + 1024*1024\n" $Ssize | bc)"
+printf "\033[36;1mMAGC resides at address \033[31;1m0x%X\033[0m\n" "$((0x100000 + Ssize - ${#Magic}))"
 
 cat "/tmp/code.${seed}.raw" "/tmp/data.${seed}.raw" > "$OUT"
 echo -n "$Magic" >> "$OUT"
