@@ -33,7 +33,7 @@ extern volatile uint64_t uptime;
 
 /// initialize RTC
 /// @return NONE
-void rtc_irq_init(void);
+void rtc_irq_init();
 
 /// Reads current timestamp in RTC
 /// @returns NONE

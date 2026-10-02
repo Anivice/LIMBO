@@ -26,6 +26,7 @@
 #include "printk.h"
 #include "backtracer.h"
 #include "marco.h"
+#include "rtc.h"
 
 /*!
  * Get the current symbol table entry, and move the entry pointer to the next symbol
@@ -104,6 +105,7 @@ void die(const char *reason)
     __asm__ volatile ("cli" ::: "memory");
     printk("\n\n%R%wKERNEL PANIC%@\n%rREASON > %s%@\n",
            reason ? reason : "(no reason)");
+    printk("Current RTC time is: %d, uptime: %d\n", read_rtc(), uptime);
 
     uint32_t frames[64];
     uint32_t count = backtrace(frames, sizeof(frames) / sizeof(frames[0]));

@@ -72,7 +72,8 @@ void rtc_irq_handler()
 
 // void idt_set_gate(uint8_t vector, uint32_t handler_addr, uint16_t selector, uint8_t flags);
 
-void rtc_irq_init(void)
+NO_PLEASE_DONT_OPTIMIZE
+void rtc_irq_init()
 {
     __asm__ volatile("cli");
     idt_set_gate(0x70, (uint32_t)(void*)rtc_irq_handler, 0x10, 0x8E);

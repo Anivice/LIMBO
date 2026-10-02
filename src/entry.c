@@ -91,7 +91,7 @@ void install_irq()
  * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
  * @return None, and is marked with [[noreturn]], so no return code is generated for main()
  */
-[[noreturn, gnu::section(".kernel_entry_point"), optimize(0)]]
+[[noreturn, gnu::section(".kernel_entry_point"), NO_OPTIMIZATION]]
 // __attribute__((section(".kernel_entry_point")))
 void main(const int32_t argc, const int32_t *argv)
 {
