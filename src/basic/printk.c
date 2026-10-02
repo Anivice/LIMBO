@@ -68,38 +68,23 @@ static void scroll_one_line()
 static void putc(const char c, const uint8_t attr)
 {
     if (!c) return;
-    uint16_t cursor_pos = get_cursor_loc();
+    uint32_t pos = get_cursor_loc();
+    if (pos >= 2000) pos = 1920;
 
-    if (c == '\r')
-    {
-        set_cursor_loc(cursor_pos / 80 * 80);
-        return;
+    if (c == '\r') {
+        pos -= pos % 80;
+    } else if (c == '\n') {
+        pos = (pos / 80 + 1) * 80;
+    } else {
+        write_to_video_memory(c, pos, attr);
+        ++pos;
     }
 
-    if ((cursor_pos >= 1920 && c == '\n') || cursor_pos == 1999)
-    {
+    if (pos >= 2000) {
         scroll_one_line();
-        if (c == '\n') {
-            set_cursor_loc(1920);
-            return;
-        }
-
-        set_cursor_loc(1919);
-        cursor_pos = 1919;
+        pos -= 80;
     }
-
-    if (c == '\n')
-    {
-        // if (cursor_pos % 80 != 0) {
-        const uint16_t new_index = (cursor_pos / 80) * 80 + 80;
-        set_cursor_loc(new_index);
-        // }
-
-        return;
-    }
-
-    write_to_video_memory(c, cursor_pos, attr);
-    set_cursor_loc(cursor_pos + 1);
+    set_cursor_loc((uint16_t)pos);
 }
 
 void put(const char c)
@@ -116,32 +101,16 @@ void put(const char c)
  */
 static void print_num(uint64_t num, const uint8_t attr, const bool base16)
 {
-    uint32_t p = 0;
-    int i = 0;
-    int base = base16 ? 16 : 10;
-
-    if (num == 0)
-    {
-        putc('0', attr);
-        return;
-    }
-
-    while (num != 0)
-    {
-        p = num % base;
-        __asm__ volatile("push %0" : : "r"(p) : "memory");
+    static constexpr char digits[] = "0123456789ABCDEF";
+    char reversed[20];
+    unsigned used = 0;
+    const unsigned base = base16 ? 16 : 10;
+    do {
+        reversed[used++] = digits[num % base];
         num /= base;
-        i++;
-    }
-
-    for (; i > 0; i--)
-    {
-        __asm__ volatile("pop %0" : "=r"(p) : "0"(p) : "memory");
-        char out = (char)('0' + p);
-        if (out > '9') {
-            out += 'A' - '9' - 1; // skip other ASCII map directly to 'A' - 'Z' region
-        }
-        putc(out, attr);
+    } while (num != 0);
+    while (used != 0) {
+        putc(reversed[--used], attr);
     }
 }
 

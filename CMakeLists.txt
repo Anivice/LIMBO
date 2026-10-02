@@ -18,7 +18,7 @@ add_compile_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs
         -fdiagnostics-show-option               # Show which option triggered the warning
         -fdiagnostics-color=always              # Enable colored diagnostics for better readability
         -g3                                     # Maximum debug information, including macro expansions
-        -O0
+        -O0 -ffast-math
         -gdwarf-4                               # Generate DWARF version 4 debug information
 )
 add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld

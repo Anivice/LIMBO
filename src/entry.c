@@ -36,7 +36,7 @@
 /*!
  * @brief Enable FPU
  */
-static void enable_fpu(void)
+static void enable_fpu()
 {
     uint32_t cr0;
     __asm__ volatile ("mov %%cr0, %0" : "=r"(cr0));
@@ -47,24 +47,18 @@ static void enable_fpu(void)
     __asm__ volatile ("fninit");     /* initialise x87 state */
 }
 
-static void install_irq(void)
+static void install_irq()
 {
-    idt_descriptor.limit = sizeof(idt) - 1;
-    idt_descriptor.base = (uint32_t)&idt;
+    __asm__ volatile ("cli" ::: "memory");
     irq_dummies_init();
 
-    __asm__ volatile (
-        "   cli                                     \n\t"
-        "   lidt        (%%eax)                     \n\t"
-        : : "a"((uint32_t)&idt_descriptor) : "memory", "cc"
-    );
-
-    for (int i = 0; i < 256; i++)
-    {
+    for (unsigned i = 0; i < 256; ++i) {
         idt_set_gate(i, (uint32_t)irq_dummy_table[i], 0x10, 0x8E);
     }
 
-    __asm__ volatile ("sti");
+    idt_descriptor.limit = sizeof(idt) - 1;
+    idt_descriptor.base = (uint32_t)idt;
+    __asm__ volatile ("lidt %0" : : "m"(idt_descriptor) : "memory");
 }
 
 typedef struct __attribute__((packed)) int_frame_privchg {
@@ -102,53 +96,31 @@ void build_and_iret(int_frame_privchg_t *f)
 // __attribute__((section(".kernel_entry_point")))
 void main(int32_t argc, int32_t *argv)
 {
-    uint32_t below_16MB = argv[0] * 1024;
-    uint32_t beyond_16MB = argv[1] * 64 * 1024;
-    bool memory_hole = (beyond_16MB != 0) && (below_16MB != 15*1024*1024);
+    install_irq();
 
-    const char * magic = "Anivice";
-    if (!memcmp(MAGIC, magic, strlen(magic)))
-    {
+    if (argc != 2 || argv == nullptr) {
+        die("Invalid loader arguments");
+    }
+
+    if (memcmp(MAGIC, "Anivice", 7) != 0) {
         die("Kernel data corrupted");
     }
 
-    enable_fpu();
-    install_irq();
-    rtc_irq_init();
-    init_syscall();
+    uint32_t below_16MB = (uint32_t)argv[0] * 1024u;
+    uint32_t beyond_16MB = (uint32_t)argv[1] * 64u * 1024u;
+    bool memory_hole = (beyond_16MB != 0) &&
+                       (below_16MB != 15u * 1024u * 1024u);
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-
-    // report on CPU
-    struct {
-        uint32_t eax;
-        uint32_t ebx;
-        uint32_t edx;
-        uint32_t ecx;
-        uint32_t zero;
-    } result = {};
-    __asm__ volatile
-    (
-        "xor %%eax, %%eax   \n\t"
-        "cpuid              \n\t"
-        : "=a"(result.eax), "=b"(result.ebx), "=c"(result.ecx), "=d"(result.edx) ::
-    );
-    if (result.eax != 0)
-    {
-        printk("CPU: %s\n", (const char*)&result.ebx);
-    }
-
     printk("0x00000000 - 0x00100000: Kernel Cache\n");
     printk("0x00100000 - 0x00200000: Kernel Code\n");
     if (memory_hole)
     {
         printk("0x00200000 - 0x%x: Main memory\n", below_16MB);
         printk("0x%x - 0x%x: Main memory\n", below_16MB, beyond_16MB);
+    } else {
+        printk("0x200000 - 0x%x: Main memory\n", below_16MB + beyond_16MB + 1024u * 1024u);
     }
-    else
-    {
-        printk("0x200000 - 0x%x: Main memory\n", (below_16MB + beyond_16MB + 1024));
-    }
-    printk("System has %d KB memory in total\n", (beyond_16MB + below_16MB + 1024) / 1024);
+    printk("System has %u KB memory in total\n", (below_16MB + beyond_16MB) / 1024u + 1024u);
 
     if (memory_hole)
     {

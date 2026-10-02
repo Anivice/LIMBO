@@ -22,21 +22,33 @@
  * @brief This file defines a backtrace functionality for GCC C code
  **/
 
-#include "../include/backtracer.h"
+#include "backtracer.h"
 #include "types.h"
+#include "marco.h"
 
-// Must compile with -fno-omit-frame-pointer.
 uint32_t backtrace(uint32_t *addrs, uint32_t max_frames)
 {
-    struct stackframe_t__ *frame;
-    asm("movl %%ebp, %0" : "=r"(frame));
-
+    uint32_t address;
+    __asm__ volatile ("movl %%ebp, %0" : "=r"(address));
     uint32_t count = 0;
-    while (frame && count < max_frames)
-    {
-        addrs[count++] = (uint32_t)(void*)frame->eip;
-        frame = frame->ebp;
-    }
 
-    return count - 1;
+    if (addrs == nullptr) return 0;
+    while (count < max_frames)
+    {
+        if ((address & 3u) != 0 ||
+            address < KERNEL_STACK_BOTTOM ||
+            address > KERNEL_STACK_TOP - sizeof(stackframe_t))
+        {
+            break;
+        }
+
+        const stackframe_t *frame = (const stackframe_t *)address;
+        uint32_t next = (uint32_t)frame->ebp;
+        uint32_t ret = frame->eip;
+        if (ret < 0x100000u || ret >= 0x178000u) break;
+        addrs[count++] = ret;
+        if (next <= address) break;
+        address = next;
+    }
+    return count;
 }

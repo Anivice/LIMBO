@@ -363,14 +363,14 @@ _entry_point: ; _entry_point()
     shl         eax,                    4
     add         ax,                     stack_temp
     mov         ebx,                    0x1FF           ; limit: 0x1FF
-    mov         ecx,                    0x496           ; attr: 0100 1001 0110
+    mov         ecx,                    0x492
     mov         si,                     32              ; descriptor is at fs:32
     call        set_descriptor
 
     ; #5, stack segment
     xor         eax,                    eax             ; baseline
     mov         ebx,                    0xFFFFF         ; limit: 4GB
-    mov         ecx,                    0xC96           ; attr: 1100 1001 0110
+    mov         ecx,                    0xC92
     mov         si,                     40              ; descriptor is at fs:40
     call        set_descriptor
 
@@ -441,7 +441,13 @@ flush16:
     ; and load necessary data and environments to execute kernel code, this stack frame will be ditched anyway
     mov             eax,                    0x20    ; 4th, temporary stack space
     mov             ss,                     eax
-    mov             esp,                    0x1FF
+    mov             esp,                    0x200
+
+    ; NOW:
+    ; Allocation:       512 bytes
+    ; Valid offsets:    0x000 through 0x1FF
+    ; Initial ESP:      0x200
+    ; First CALL write: 0x1FC through 0x1FF
 
     ; now, we convert the code segment, current temporary cs (#3), to flat mode
     ; so that eip is pointed to the actual physical address
@@ -455,39 +461,36 @@ flush16:
     jmp far         [es:edi+flush16_ptr]
 
 flat_cs_mode:
-    ; print notification
+    ; EDI is the linear base of the loader's data segment.
+    ; Fill every gate before publishing the table with LIDT.
+    mov             ecx,                    256
+    lea             ebp,                    [edi + idt_start]
+.fill_idt:
+    mov word        [ebp],                  (iret_stub-$$) & 0xFFFF
+    mov word        [ebp + 2],              0x18
+    mov byte        [ebp + 4],              0
+    mov byte        [ebp + 5],              0x8E
+    mov word        [ebp + 6],              ((iret_stub-$$) >> 16) & 0xFFFF
+    add             ebp,                    8
+    loop            .fill_idt
+
+    lea             eax,                    [edi + idt_start]
+    mov             [edi + idt_descriptor_idt_start], eax
+    lidt            [edi + idt_descriptor]
+
+    ; BIOS calls are finished. Keep hardware IRQs masked.
+    mov             al,                     0xFF
+    out             0x21,                   al
+    out             0xA1,                   al
+
     mov             eax,                    msg_done
     call            dsprint
-
     push            edi
-
-    ; print 32 bit protected mode loader greeting message
-    mov             esi,                    edi
-    add             esi,                    greet32
+    lea             esi,                    [edi + greet32]
     mov             ebp,                    0x71
     call            puts
-
-    ; setup dummy IDT
     mov             eax,                    initialize_interrupt
     call            dsprint
-
-    mov             eax,                    idt_start
-    add             eax,                    edi
-    mov             [es:edi+idt_descriptor_idt_start], eax
-    lidt            [es:edi+idt_descriptor]
-
-    mov             ecx,                    256
-    mov             ebp,                    idt_start
-    add             ebp,                    edi
-    .fill_idt:
-        mov word    [es:ebp    ],           (iret_stub-$$) & 0xFFFF
-        mov word    [es:ebp + 2],           0x18                        ; loader segment
-        mov byte    [es:ebp + 4],           0                           ; reserved
-        mov byte    [es:ebp + 5],           0x8E                        ; P=1,DPL=0,Type=14 (32-bit interrupt gate)
-        mov word    [es:ebp + 6],           ((iret_stub-$$) >> 16) & 0xFFFF
-        add         ebp,                    8
-    loop .fill_idt
-    sti
 
     call            print_done
     ; now we load the actual kernel.
@@ -495,7 +498,7 @@ flat_cs_mode:
     ; with first 640KB being the code section, and higher 384KB being the data section
     mov             eax,                    prepare_to_move_kernel
     call            dsprint
-    mov             ecx,                    654335-40448+1
+    mov             ecx,                    KERNEL_BYTES
     mov             esi,                    0x9E00
     mov             edi,                    1024*1024
     cld
@@ -503,32 +506,34 @@ flat_cs_mode:
 
     pop             edi
 
-    ; setup stack space
+    ; Reuse the copied staging area as the kernel stack.
+    ; Reserved stack interval: [0x90000, 0x9FC00).
     mov             eax,                    0x28
     mov             ss,                     eax
-    mov             esp,                    0x9FBFF     ; previously 640KB kernel cache
-    xor             ebx,                    ebx
-    xor             ecx,                    ecx
-    xor             edx,                    edx
+    mov             esp,                    0x9FC00
     xor             ebp,                    ebp
-    xor             esi,                    esi
+    cld
 
-    mov             eax,                    edi
-    add             eax,                    argv
+    lea             eax,                    [edi + argv]
+    sub             esp,                    8
     push            eax
     push dword      2
-
-    xor             eax,                    eax
-    xor             edi,                    edi
-    push dword      0x00
-    jmp dword       0x0010:0x100000
+    mov             eax,                    0x100000
+    call            eax
 
     cli
-    .@@1: hlt
-    jmp             .@@1
+.returned:
+    hlt
+    jmp             .returned
 
 iret_stub:
-    iret
+    cli
+    mov             ax,                     0x08
+    mov             ds,                     ax
+    mov word        [0xB8000],              0x4F45
+.halt:
+    hlt
+    jmp             .halt
 
 dsprint: ;(msg=eax)
     pusha
@@ -615,6 +620,7 @@ get_cursor: ; get_cursor()->eax
     ret
 
 set_cursor: ; set_cursor(eax)
+    push            eax
     push            edx
     push            ebx
 
@@ -642,6 +648,7 @@ set_cursor: ; set_cursor(eax)
 
     pop             ebx
     pop             edx
+    pop             eax
     ret
 
 putc:   ; putc(eax=character,[ebp=attr])
@@ -658,12 +665,12 @@ putc:   ; putc(eax=character,[ebp=attr])
     jne             .check_second_condition                             ; If ebx != 0x0A, skip to second condition
     jmp             .start_of_scrolling                                 ; Both conditions met: eax >= 1920 AND ebx == 0x0A
                                                                         ; Jump to start scrolling
-    ; Second Condition: ax == 1999
+    ; Second Condition: ax == 2000
     .check_second_condition:
-        cmp         eax,                    1999                        ; if eax == 1999
-        jne         .end_of_scrolling                                   ; If eax != 1999, jump to end_of_scrolling
+        cmp         eax,                    2000                        ; if eax == 2000
+        jne         .end_of_scrolling                                   ; If eax != 2000, jump to end_of_scrolling
 
-    ; at here, condition met: eax == 1999
+    ; at here, condition met: eax == 2000
     .start_of_scrolling:
 
         mov         edi,                    0xB8000                     ; destination
@@ -689,7 +696,7 @@ putc:   ; putc(eax=character,[ebp=attr])
         cmp         ebx,                    0x0A                        ; check if ebx is '\n'
         je          .set_cursor_when_ebx_equals_to_0x0A                 ; print '\n'
                                                                         ; if not
-        mov         eax,                    1919                        ; line end at second last line
+        sub         eax,                    80                          ; line end at second last line
         call        set_cursor                                          ; set cursor
         jmp         .end_of_scrolling                                   ; end scrolling handling, continue to put the character
                                                                         ; move cursor to start at the bottom of the screen if ebx == 0x0A
@@ -701,18 +708,9 @@ putc:   ; putc(eax=character,[ebp=attr])
     .end_of_scrolling:
 
     ; newline handler:
-    cmp             ebx,                    0x0A                        ; if it's a newline marker
-    jne             .end_newline_filter_conditions                      ; not newline, skip conditions and proceed to normal print
-    push            eax                                                 ; save eax
-    push            ebx                                                 ; save ebx
-    xor             edx,                    edx                         ; clear edx
-    mov             ebx,                    80                          ; ebx is now the number of characters of one line
-    div             ebx                                                 ; eax % 80
-    pop             ebx                                                 ; recover ebx
-    pop             eax                                                 ; recover eax
-    cmp             edx,                    0                           ; check eax mod 80 == 0
-    jne             .set_cursor_to_newline                              ; not 0, then newline
-    jmp             .end                                                ; is 0, skip this print
+    ; An explicit newline always advances to the next row.
+    cmp             ebx,                    0x0A
+    je              .set_cursor_to_newline
 
     .end_newline_filter_conditions:
     ; Normal print:
@@ -800,7 +798,7 @@ flush16_ptr:
     dd 0        ; 32-bit offset
     dw 0x10     ; selector, 2nd one
 
-stack_temp: resb 0x1FF
+stack_temp: times 0x200 db 0
 
 align 8
 idt_start:

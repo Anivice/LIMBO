@@ -31,83 +31,94 @@
 
 /*!
  * Get the current symbol table entry, and move the entry pointer to the next symbol
- * @param sysmap_ptr Current symbol map pointer
- * @param symbol_literal Symbol literal buffer
- * @param symbol_max Symbol literal buffer size
+ * @param cursor Current symbol map pointer
+ * @param name Symbol literal buffer
+ * @param capacity Symbol literal buffer size
  * @return Symbol address
  */
-uint32_t query_map(char ** sysmap_ptr, char * symbol_literal, const uint32_t symbol_max)
+static uint32_t query_map(char **cursor, char *name, uint32_t capacity)
 {
-    uint32_t literal_off = 0;
-    const uint32_t *sysmap_symbol_ip = (uint32_t *)*sysmap_ptr;
-    char * symbol = (*sysmap_ptr + 4);
-    while (*symbol != 0x0a)
-    {
-        if (literal_off < symbol_max) {
-            symbol_literal[literal_off++] = *symbol;
+    const unsigned char *p = (const unsigned char *)*cursor;
+    const unsigned char *end = (const unsigned char *)MAGIC;
+    if (capacity != 0) name[0] = '\0';
+
+    if (p < (const unsigned char *)SYSTEM_SYMBOL_MAP ||
+        p > end || (uint32_t)(end - p) < 4u) {
+        return 0;
         }
 
-        symbol++;
+    const uint32_t address = (uint32_t)p[0] |
+                       ((uint32_t)p[1] << 8) |
+                       ((uint32_t)p[2] << 16) |
+                       ((uint32_t)p[3] << 24);
+    if (address == 0) return 0;
+    p += 4;
+
+    uint32_t used = 0;
+    while (p < end && *p != '\n' && *p != '\0') {
+        if (capacity != 0 && used < capacity - 1) {
+            name[used++] = (char)*p;
+        }
+        ++p;
     }
-    symbol++;
-    *sysmap_ptr = symbol;
-    return *sysmap_symbol_ip;
+    if (capacity != 0) name[used] = '\0';
+    if (p == end || *p != '\n') return 0;
+
+    *cursor = (char *)(p + 1);
+    return address;
 }
 
 /*!
  * Interpret symbol by currently provided stackframe
- * @param frame Current stacktrace
+ * @param ip Current stacktrace
  * @param sym_ptr Symbol entry buffer
  * @param sym_name Symbol name(literal) buffer
- * @param sym_name_max Symbol name buffer size
+ * @param capacity Symbol name buffer size
  */
-void get_symbol(const uint32_t frame, uint32_t * sym_ptr, char * sym_name, const uint32_t sym_name_max)
+static void get_symbol(const uint32_t ip, uint32_t *sym_ptr, char *sym_name, const uint32_t capacity)
 {
-    char buffer[32] = { };
-    char symbol_literal[32] = { };
-    uint32_t result;
-    char * sysmap;
-    *(uint32_t*)(&sysmap) = (uint32_t)SYSTEM_SYMBOL_MAP;
-    uint32_t symbol = 0;
-    do
-    {
-        result = symbol;
-        memcpy(symbol_literal, buffer, sizeof(buffer));
-        memset(buffer, 0, sizeof(buffer));
-        symbol = query_map(&sysmap, buffer, sizeof(buffer));
-    } while (symbol && symbol < frame);
+    char *cursor = (char *)SYSTEM_SYMBOL_MAP;
+    char candidate[32];
+    *sym_ptr = 0;
+    if (capacity != 0) sym_name[0] = '\0';
 
-    memcpy(sym_name, symbol_literal, MIN(sym_name_max, sizeof(symbol_literal)));
-    *sym_ptr = result;
+    for (;;) {
+        uint32_t address = query_map(&cursor, candidate, sizeof(candidate));
+        if (address == 0 || address > ip) break;
+        if (address < 0x100000u || address >= 0x178000u) continue;
+
+        *sym_ptr = address;
+        if (capacity != 0) {
+            uint32_t i = 0;
+            while (i < capacity - 1 && candidate[i] != '\0') {
+                sym_name[i] = candidate[i];
+                ++i;
+            }
+            sym_name[i] = '\0';
+        }
+    }
 }
 
 [[noreturn]]
-void die(const char * str)
+void die(const char *reason)
 {
-    char frame_trace_literal_buffer[256] = { };
-    char name_buffer[32] = { };
-    uint32_t symbol = 0;
-    uint32_t stackframes[64];
-    auto const frames = backtrace(stackframes, sizeof(stackframes) / sizeof(stackframes[0]));
-    uint32_t offset = sprintf(frame_trace_literal_buffer, sizeof(frame_trace_literal_buffer), "TRACED %d FRAME(S):\n", frames);
-    for (uint32_t i = 0; i < frames; i++)
-    {
-        offset += sprintf(frame_trace_literal_buffer + offset, sizeof(frame_trace_literal_buffer), " at 0x%x: ", stackframes[i]);
-        memset(name_buffer, 0, sizeof(name_buffer));
-        get_symbol(stackframes[i], &symbol, name_buffer, sizeof(name_buffer) - 1);
-        offset += sprintf(frame_trace_literal_buffer + offset, sizeof(frame_trace_literal_buffer), "%s (0x%x)\n", name_buffer, symbol);
+    __asm__ volatile ("cli" ::: "memory");
+    printk("\n\n%R%wKERNEL PANIC%@\n%rREASON > %s%@\n",
+           reason ? reason : "(no reason)");
+
+    uint32_t frames[64];
+    uint32_t count = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
+    printk("TRACED %u FRAME(S):\n", count);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        char name[32];
+        uint32_t symbol;
+        get_symbol(frames[i] - 1u, &symbol, name, sizeof(name));
+        printk(" at 0x%x: %s (0x%x)\n", frames[i],
+               symbol != 0 ? name : "<unknown>", symbol);
     }
 
-    printk("\n\n"
-        "%R%w--------------------------------- KERNEL PANIC ---------------------------------%@"
-        "%aTIME: uptime: %Ds, UNIX timestamp: %U\n"
-        "%rREASON > %s%@\n"
-        "%mSTACKTRACE:\n"
-        "%s\n%@"
-        "%R%w--------------------------------------------------------------------------------%@",
-        uptime, read_rtc(), frame_trace_literal_buffer, str);
-    while (1)
-    {
-        __asm__ __volatile__("cli\n\thlt");
+    for (;;) {
+        __asm__ volatile ("hlt" ::: "memory");
     }
 }

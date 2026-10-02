@@ -26,42 +26,31 @@
 #include "types.h"
 #include "printk.h"
 
-void memset(void * dest, const int val, const uint32_t size)
+void *memset(void *dest, const int val, const uint32_t size)
 {
-    for (uint32_t i = 0; i < size; i++)
-    {
-        ((char*)dest)[i] = (char)val;
-    }
+    unsigned char *d = dest;
+    for (uint32_t i = 0; i < size; ++i) d[i] = (unsigned char)val;
+    return dest;
 }
 
-void memcpy(void * dest, const void * src, const uint32_t size)
+void *memcpy(void *dest, const void *src, const uint32_t size)
 {
-    for (uint32_t i = 0; i < size; i++)
-    {
-        ((char*)dest)[i] =  ((char*)src)[i];
-    }
+    unsigned char *d = dest;
+    const unsigned char *s = src;
+    for (uint32_t i = 0; i < size; ++i) d[i] = s[i];
+    return dest;
 }
 
-int memcmp(const void * s1, const void * s2, uint32_t n)
+int memcmp(const void *s1, const void *s2, const uint32_t n)
 {
-    int32_t sum_s1 = 0, sum_s2 = 0;
-    bool is_same = true;
-    for (uint32_t i = 0; i < n; i++)
-    {
-        sum_s1 += ((char*)s1)[i];
-        sum_s2 += ((char*)s2)[i];
-        if (((char*)s1)[i] != ((char*)s2)[i])
-        {
-            is_same = false;
+    const unsigned char *a = s1;
+    const unsigned char *b = s2;
+    for (uint32_t i = 0; i < n; ++i) {
+        if (a[i] != b[i]) {
+            return (int)a[i] - (int)b[i];
         }
     }
-
-    if (is_same)
-    {
-        return 0;
-    }
-
-    return (sum_s1 - sum_s2);
+    return 0;
 }
 
 /*!
@@ -91,34 +80,19 @@ static void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t
  * @param buffer_len Buffer max length
  * @return NONE
  */
-static void sprint_num(uint64_t num, const bool base16, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sprint_num(uint64_t num, const bool base16, char *buffer,
+                       uint32_t *offset, const uint32_t buffer_len)
 {
-    uint32_t p = 0;
-    int i = 0;
-    int base = base16 ? 16 : 10;
-
-    if (num == 0)
-    {
-        sputc('0', buffer, offset, buffer_len);
-        return;
-    }
-
-    while (num != 0)
-    {
-        p = num % base;
-        __asm__ volatile("push %0" : : "r"(p) : "memory");
+    static constexpr char digits[] = "0123456789ABCDEF";
+    char reversed[20];
+    unsigned used = 0;
+    const unsigned base = base16 ? 16 : 10;
+    do {
+        reversed[used++] = digits[num % base];
         num /= base;
-        i++;
-    }
-
-    for (; i > 0; i--)
-    {
-        __asm__ volatile("pop %0" : "=r"(p) : "0"(p) : "memory");
-        char out = (char)('0' + p);
-        if (out > '9') {
-            out += 'A' - '9' - 1; // skip other ASCII map directly to 'A' - 'Z' region
-        }
-        sputc(out, buffer, offset, buffer_len);
+    } while (num != 0);
+    while (used != 0) {
+        sputc(reversed[--used], buffer, offset, buffer_len);
     }
 }
 
@@ -237,6 +211,7 @@ static void sputs(const char *str, char * buffer, uint32_t * offset, const uint3
 
 uint32_t sprintf(char *buffer, const uint32_t buffer_length, const char * fmt, ...)
 {
+    if (buffer_length != 0) buffer[0] = '\0';
     if (!fmt) return 0;
     __builtin_va_list ap;
     __builtin_va_start(ap, fmt);
@@ -349,17 +324,11 @@ int strlen(const char * s)
     return len;
 }
 
-int strnlen(const char * s, const int maxlen)
+int strnlen(const char *s, const int maxlen)
 {
     int len = 0;
-    while (s[len] != '\0')
-    {
-        len++;
-        if (len >= maxlen)
-        {
-            return len;
-        }
+    while (len < maxlen && s[len] != '\0') {
+        ++len;
     }
-
     return len;
 }

@@ -33,7 +33,7 @@
  * @param val Value
  * @param size Buffer size
  */
-void memset(void * dest, int val, uint32_t size);
+void * memset(void * dest, int val, uint32_t size);
 
 /*!
  * Copy buffer from source to destination
@@ -41,7 +41,7 @@ void memset(void * dest, int val, uint32_t size);
  * @param src Source
  * @param size Size
  */
-void memcpy(void * dest, const void * src, uint32_t size);
+void * memcpy(void * dest, const void * src, uint32_t size);
 
 /*!
  *

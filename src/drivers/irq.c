@@ -23,56 +23,34 @@
  **/
 
 #include "irq.h"
-#include "die.h"
 
-__attribute__((naked)) void irq_dummy_0()           { die("INT 000"); }
-__attribute__((naked)) void irq_dummy_1()           { die("INT 001"); }
-__attribute__((naked)) void irq_dummy_2()           { die("INT 002"); }
-__attribute__((naked)) void irq_dummy_3()           { die("INT 003"); }
-__attribute__((naked)) void irq_dummy_4()           { die("INT 004"); }
-__attribute__((naked)) void irq_dummy_5()           { die("INT 005"); }
-__attribute__((naked)) void irq_dummy_6()           { die("INT 006"); }
-__attribute__((naked)) void irq_dummy_7()           { die("INT 007"); }
-__attribute__((naked)) void irq_dummy_8()           { die("INT 008"); }
-__attribute__((naked)) void irq_dummy_9()           { die("INT 009"); }
-__attribute__((naked)) void irq_dummy_10()          { die("INT 010"); }
-__attribute__((naked)) void irq_dummy_11()          { die("INT 011"); }
-__attribute__((naked)) void irq_dummy_12()          { die("INT 012"); }
-__attribute__((naked)) void irq_dummy_13()          { die("INT 013"); }
-__attribute__((naked)) void irq_dummy_14()          { die("INT 014"); }
-__attribute__((naked)) void irq_dummy_15()          { die("INT 015"); }
-__attribute__((naked)) void irq_dummy_16()          { die("INT 016"); }
-__attribute__((naked)) void irq_dummy_17_to_31()    { __asm__("iret");   }
-__attribute__((naked)) void irq_dummy_32_to_255()   { __asm__("iret");   }
+static const char irq_message[] __attribute__((used)) =
+    "Unhandled processor exception or interrupt";
 
-void * irq_dummy_table[256];
+__attribute__((naked))
+static void irq_terminal()
+{
+    __asm__ (
+        "cli                        \n\t"
+        "cld                        \n\t"
+        "mov    $0x08,      %ax     \n\t"
+        "mov    %ax,        %ds     \n\t"
+        "mov    %ax,        %es     \n\t"
+        "xor    %ebp,       %ebp    \n\t"
+        "and    $-16,       %esp    \n\t"
+        "sub    $12,        %esp    \n\t"
+        "push   $irq_message        \n\t"
+        "call   die                 \n\t"
+     "1: hlt                        \n\t"
+        "jmp    1b                  \n\t"
+    );
+}
+
+void *irq_dummy_table[256];
 
 void irq_dummies_init()
 {
-    irq_dummy_table[0] = irq_dummy_0;
-    irq_dummy_table[1] = irq_dummy_1;
-    irq_dummy_table[2] = irq_dummy_2;
-    irq_dummy_table[3] = irq_dummy_3;
-    irq_dummy_table[4] = irq_dummy_4;
-    irq_dummy_table[5] = irq_dummy_5;
-    irq_dummy_table[6] = irq_dummy_6;
-    irq_dummy_table[7] = irq_dummy_7;
-    irq_dummy_table[8] = irq_dummy_8;
-    irq_dummy_table[9] = irq_dummy_9;
-    irq_dummy_table[10] = irq_dummy_10;
-    irq_dummy_table[11] = irq_dummy_11;
-    irq_dummy_table[12] = irq_dummy_12;
-    irq_dummy_table[13] = irq_dummy_13;
-    irq_dummy_table[14] = irq_dummy_14;
-    irq_dummy_table[15] = irq_dummy_15;
-    irq_dummy_table[16] = irq_dummy_16;
-    for (int i = 17; i <= 31; i++)
-    {
-        irq_dummy_table[i] = irq_dummy_17_to_31;
-    }
-
-    for (int i = 32; i <= 255; i++)
-    {
-        irq_dummy_table[i] = irq_dummy_32_to_255;
+    for (unsigned i = 0; i < 256; ++i) {
+        irq_dummy_table[i] = irq_terminal;
     }
 }

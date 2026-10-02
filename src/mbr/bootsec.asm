@@ -138,9 +138,13 @@ start:
     mov             al,                     1                               ; read one sector
     call            read_disk
 
-    ; now, we determine how large the program is:
-    mov             ax,                     [es:di]                         ; first value is the actual program size
-    add             ax,                     16                              ; add header size
+    ; Header stores the end offset before the final 16 bytes.
+    mov             ax,                     [es:di]
+    cmp             ax,                     16
+    jb              .bad_loader_size
+    cmp             ax,                     8192 - 16
+    ja              .bad_loader_size
+    add             ax,                     16
     ; print info:
     mov             bp,                     _info_program_size
     call            print_msg
@@ -165,8 +169,9 @@ start:
 
     ; we don't proceed if loader is larger than 16 sectors
     cmp             al,                     15
-    jle             .continue
+    jbe             .continue
 
+.bad_loader_size:
     xor             cx,                     cx
     mov             ds,                     cx
     mov             bp,                     _too_large

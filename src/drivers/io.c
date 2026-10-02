@@ -24,51 +24,31 @@
 
 #include "io.h"
 
-void out8(const uint16_t port, const uint8_t value)
+void out8(uint16_t port, uint8_t value)
 {
-    __asm__ volatile (
-        "outb   %%al,   %%dx        \n\t"
-        :
-        : "Nd"(port), "a"(value)
-        : "cc"
-    );
+    __asm__ volatile ("outb %b0, %w1"
+                      : : "a"(value), "Nd"(port) : "memory");
 }
 
-void out16(const uint16_t port, const uint16_t value)
+void out16(uint16_t port, uint16_t value)
 {
-    __asm__ volatile (
-        "outw   %%ax,   %%dx        \n\t"
-        :
-        : "Nd"(port), "a"(value)
-        : "cc"
-    );
+    __asm__ volatile ("outw %w0, %w1"
+                      : : "a"(value), "Nd"(port) : "memory");
 }
 
-void in8(const uint16_t port, uint8_t *value)
+void in8(uint16_t port, uint8_t *value)
 {
     uint8_t result;
-    __asm__ volatile (
-        "xor    %%eax,  %%eax       \n\t"
-        "inb    %%dx,   %%al        \n\t"
-        : "=a"(result)
-        : "Nd"(port), "0"(value)
-        : "cc"
-    );
-
+    __asm__ volatile ("inb %w1, %b0"
+                      : "=a"(result) : "Nd"(port) : "memory");
     *value = result;
 }
 
-void in16(const uint16_t port, uint16_t *value)
+void in16(uint16_t port, uint16_t *value)
 {
     uint16_t result;
-    __asm__ volatile (
-        "xor    %%eax,  %%eax       \n\t"
-        "inw    %%dx,   %%ax        \n\t"
-        : "=a"(result)
-        : "Nd"(port), "0"(value)
-        : "cc"
-    );
-
+    __asm__ volatile ("inw %w1, %w0"
+                      : "=a"(result) : "Nd"(port) : "memory");
     *value = result;
 }
 
