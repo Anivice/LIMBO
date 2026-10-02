@@ -103,9 +103,9 @@ void die(const char * str)
         "%aTIME: uptime: %Ds, UNIX timestamp: %U\n"
         "%rREASON > %s%@\n"
         "%mSTACKTRACE:\n"
-        "%s%@"
+        "%s\n%@"
         "%R%w--------------------------------------------------------------------------------%@",
-        str, uptime, read_rtc(), frame_trace_literal_buffer);
+        uptime, read_rtc(), frame_trace_literal_buffer, str);
     while (1)
     {
         __asm__ __volatile__("cli\n\thlt");

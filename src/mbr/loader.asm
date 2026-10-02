@@ -395,7 +395,7 @@ _entry_point: ; _entry_point()
     ; load descriptor
     lgdt        [ds:gdt_boundary]
 
-    ; disable A20
+    ; enable A20
     in          al,                     0x92
     or          al,                     0000_0010B
     out         0x92,                   al
