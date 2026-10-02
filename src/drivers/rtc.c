@@ -47,7 +47,7 @@
 #define EOI                     (0x20)
 
 /// CPU uptime determined by RTC interrupt counter
-volatile uint64_t uptime __attribute__((used));
+static volatile uint64_t uptime __attribute__((used));
 
 NO_PLEASE_DONT_OPTIMIZE
 static uint32_t rtc_irq_save()
@@ -68,8 +68,8 @@ static void rtc_irq_restore(uint32_t flags)
 NO_PLEASE_DONT_OPTIMIZE
 uint64_t rtc_get_uptime()
 {
-    uint32_t flags = rtc_irq_save();
-    uint64_t value = uptime;
+    const uint32_t flags = rtc_irq_save();
+    const uint64_t value = uptime;
     rtc_irq_restore(flags);
     return value;
 }
@@ -101,7 +101,7 @@ static void rtc_irq_handler()
 NO_PLEASE_DONT_OPTIMIZE
 void rtc_irq_init()
 {
-    uint32_t flags = rtc_irq_save();
+    const uint32_t flags = rtc_irq_save();
     idt_set_gate(0x70, (uint32_t)rtc_irq_handler, 0x10, 0x8E);
 
     outb(0x70, RTC_REGISTER_B);
