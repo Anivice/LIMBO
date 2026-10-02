@@ -18,7 +18,6 @@ add_compile_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs
         -fdiagnostics-show-option               # Show which option triggered the warning
         -fdiagnostics-color=always              # Enable colored diagnostics for better readability
         -g3                                     # Maximum debug information, including macro expansions
-        -O0 -ffast-math
         -gdwarf-4                               # Generate DWARF version 4 debug information
 )
 add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -static -nostartfiles -m32 -T ${CMAKE_SOURCE_DIR}/scripts/link.ld
@@ -31,9 +30,16 @@ add_link_options(-ffreestanding -fno-stack-protector -nostdlib -nodefaultlibs -s
         -fdiagnostics-show-option               # Show which option triggered the warning
         -fdiagnostics-color=always              # Enable colored diagnostics for better readability
         -g3                                     # Maximum debug information, including macro expansions
-        -O0
         -gdwarf-4                               # Generate DWARF version 4 debug information
 )
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    add_compile_options(-O0)
+    add_link_options(-O0)
+else ()
+    add_compile_options(-O3 -ffast-math -flto)
+    add_link_options(-O3 -flto -fuse-linker-plugin -fwhole-program)
+endif ()
 
 include_directories(src/include)
 add_library(limbo SHARED

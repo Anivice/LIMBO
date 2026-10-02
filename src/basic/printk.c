@@ -26,12 +26,14 @@
 #include "gpu.h"
 #include "stdint.h"
 #include "types.h"
+#include "marco.h"
 
 /*!
  * @brief Scroll screen upwards one line
  * @return NONE
  */
-static void scroll_one_line()
+static NO_PLEASE_DONT_OPTIMIZE
+void scroll_one_line()
 {
     __asm__ __volatile__(
         "push       %%edi                               \n\t"

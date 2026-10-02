@@ -466,11 +466,11 @@ flat_cs_mode:
     mov             ecx,                    256
     lea             ebp,                    [edi + idt_start]
 .fill_idt:
-    mov word        [ebp],                  (iret_stub-$$) & 0xFFFF
-    mov word        [ebp + 2],              0x18
-    mov byte        [ebp + 4],              0
-    mov byte        [ebp + 5],              0x8E
-    mov word        [ebp + 6],              ((iret_stub-$$) >> 16) & 0xFFFF
+    mov word        [es:ebp],               (iret_stub-$$) & 0xFFFF
+    mov word        [es:ebp + 2],           0x18
+    mov byte        [es:ebp + 4],           0
+    mov byte        [es:ebp + 5],           0x8E
+    mov word        [es:ebp + 6],           ((iret_stub-$$) >> 16) & 0xFFFF
     add             ebp,                    8
     loop            .fill_idt
 

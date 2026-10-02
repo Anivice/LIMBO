@@ -26,6 +26,7 @@
 #include "types.h"
 #include "marco.h"
 
+NO_PLEASE_DONT_OPTIMIZE
 uint32_t backtrace(uint32_t *addrs, uint32_t max_frames)
 {
     uint32_t address;

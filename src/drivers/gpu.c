@@ -24,12 +24,14 @@
 
 #include "gpu.h"
 #include "io.h"
+#include "marco.h"
 
 #define GPU_REGISTER_INDEX (0x3d4)
 #define GPU_CURSOR_H8_BIT  (0x0e)
 #define GPU_CURSOR_L8_BIT  (0x0f)
 #define GPU_INDEXED_REG_IO (0x3d5)
 
+NO_PLEASE_DONT_OPTIMIZE
 void write_to_video_memory(const char c, const uint32_t loc, const uint8_t attr)
 {
     __asm__ volatile (

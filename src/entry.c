@@ -28,15 +28,13 @@
 #include "types.h"
 #include "irq.h"
 #include "die.h"
-#include "ide.h"
-#include "syscall.h"
 #include "marco.h"
-#include "ldt.h"
 
 /*!
  * @brief Enable FPU
  */
-static void enable_fpu()
+static NO_PLEASE_DONT_OPTIMIZE
+void enable_fpu()
 {
     uint32_t cr0;
     __asm__ volatile ("mov %%cr0, %0" : "=r"(cr0));
@@ -47,7 +45,8 @@ static void enable_fpu()
     __asm__ volatile ("fninit");     /* initialise x87 state */
 }
 
-static void install_irq()
+static NO_PLEASE_DONT_OPTIMIZE
+void install_irq()
 {
     __asm__ volatile ("cli" ::: "memory");
     irq_dummies_init();
@@ -61,30 +60,30 @@ static void install_irq()
     __asm__ volatile ("lidt %0" : : "m"(idt_descriptor) : "memory");
 }
 
-typedef struct __attribute__((packed)) int_frame_privchg {
-    uint32_t eip;
-    uint32_t cs;
-    uint32_t eflags;
-    uint32_t user_esp;
-    uint32_t user_ss;
-} int_frame_privchg_t;
+// typedef struct __attribute__((packed)) int_frame_privchg {
+//     uint32_t eip;
+//     uint32_t cs;
+//     uint32_t eflags;
+//     uint32_t user_esp;
+//     uint32_t user_ss;
+// } int_frame_privchg_t;
 
-__attribute__((naked))           /* suppress C prologue/epilogue */
-void build_and_iret(int_frame_privchg_t *f)
-{
-    __asm__ __volatile__ (
-        "mov  4(%esp), %eax \n\t"   /* eax = pointer to frame      */
-        "pushl 16(%eax)     \n\t"   /* SS  */
-        "pushl 12(%eax)     \n\t"   /* ESP */
-        "pushl  8(%eax)     \n\t"   /* EFLAGS */
-        "pushl  4(%eax)     \n\t"   /* CS  */
-        "pushl  0(%eax)     \n\t"   /* EIP */
-    );
-
-    __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
-    __asm__ volatile("ltr %%ax" :: "a"(0x38):"cc", "memory");
-                               __asm__ volatile ("iret");
-}
+// __attribute__((naked, optimize(0)))           /* suppress C prologue/epilogue */
+// void build_and_iret(int_frame_privchg_t *f)
+// {
+//     __asm__ __volatile__ (
+//         "mov  4(%esp), %eax \n\t"   /* eax = pointer to frame      */
+//         "pushl 16(%eax)     \n\t"   /* SS  */
+//         "pushl 12(%eax)     \n\t"   /* ESP */
+//         "pushl  8(%eax)     \n\t"   /* EFLAGS */
+//         "pushl  4(%eax)     \n\t"   /* CS  */
+//         "pushl  0(%eax)     \n\t"   /* EIP */
+//     );
+//
+//     __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
+//     __asm__ volatile("ltr %%ax" :: "a"(0x38):"cc", "memory");
+//                                __asm__ volatile ("iret");
+// }
 
 /*!
  * @brief Kernel entry point and stage dispatcher.
@@ -92,7 +91,7 @@ void build_and_iret(int_frame_privchg_t *f)
  * This function is directly jumped from stage 2 loader and should never ever return (no return address in stack frame)
  * @return None, and is marked with [[noreturn]], so no return code is generated for main()
  */
-[[noreturn, gnu::section(".kernel_entry_point")]]
+[[noreturn, gnu::section(".kernel_entry_point"), optimize(0)]]
 // __attribute__((section(".kernel_entry_point")))
 void main(const int32_t argc, const int32_t *argv)
 {

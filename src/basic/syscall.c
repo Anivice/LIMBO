@@ -3,8 +3,9 @@
 #include "types.h"
 #include "idt.h"
 #include "errno.h"
+#include "marco.h"
 
-__attribute__((naked))
+__attribute__((naked, NO_OPTIMIZATION))
 void isr_0x80 ()
 {
     __asm__ __volatile__ (
@@ -37,6 +38,7 @@ void isr_0x80 ()
     );
 }
 
+NO_PLEASE_DONT_OPTIMIZE
 int32_t syscall_req_dispatcher(
     const uint32_t entry  /* eax */,
     const uint32_t param1 /* ebx */,

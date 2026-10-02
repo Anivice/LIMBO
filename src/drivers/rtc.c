@@ -25,6 +25,7 @@
 #include "rtc.h"
 #include "io.h"
 #include "string.h"
+#include "marco.h"
 
 #define RTC_REGISTER_INDEX      (0x70)
 #define RTC_REGISTER_IO         (0x71)
@@ -47,8 +48,8 @@
 volatile uint64_t uptime;
 
 /// Interrupt service routine for RTC
-__attribute__((naked))
-void rtc_irq_handler(void)
+__attribute__((naked, NO_OPTIMIZATION))
+void rtc_irq_handler()
 {
     __asm__ volatile(
         "   pusha                                           \n\t"

@@ -11,5 +11,7 @@
 #define MAGIC                          ((const char *)(0x100000u + KERNEL_IMAGE_BYTES - 7u))
 #define KERNEL_STACK_BOTTOM            0x90000u
 #define KERNEL_STACK_TOP               0x9FC00u
+#define NO_OPTIMIZATION                noipa, optimize(0), used
+#define NO_PLEASE_DONT_OPTIMIZE        __attribute__((NO_OPTIMIZATION))
 
 #endif //MARCO_H

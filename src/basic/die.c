@@ -23,11 +23,9 @@
  **/
 
 #include "die.h"
-#include "string.h"
-#include "rtc.h"
 #include "printk.h"
-#include "../include/backtracer.h"
-#include "../include/marco.h"
+#include "backtracer.h"
+#include "marco.h"
 
 /*!
  * Get the current symbol table entry, and move the entry pointer to the next symbol
@@ -100,6 +98,7 @@ static void get_symbol(const uint32_t ip, uint32_t *sym_ptr, char *sym_name, con
 }
 
 [[noreturn]]
+NO_PLEASE_DONT_OPTIMIZE
 void die(const char *reason)
 {
     __asm__ volatile ("cli" ::: "memory");

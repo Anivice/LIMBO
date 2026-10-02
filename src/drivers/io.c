@@ -23,19 +23,23 @@
  **/
 
 #include "io.h"
+#include "marco.h"
 
+NO_PLEASE_DONT_OPTIMIZE
 void out8(uint16_t port, uint8_t value)
 {
     __asm__ volatile ("outb %b0, %w1"
                       : : "a"(value), "Nd"(port) : "memory");
 }
 
+NO_PLEASE_DONT_OPTIMIZE
 void out16(uint16_t port, uint16_t value)
 {
     __asm__ volatile ("outw %w0, %w1"
                       : : "a"(value), "Nd"(port) : "memory");
 }
 
+NO_PLEASE_DONT_OPTIMIZE
 void in8(uint16_t port, uint8_t *value)
 {
     uint8_t result;
@@ -44,6 +48,7 @@ void in8(uint16_t port, uint8_t *value)
     *value = result;
 }
 
+NO_PLEASE_DONT_OPTIMIZE
 void in16(uint16_t port, uint16_t *value)
 {
     uint16_t result;

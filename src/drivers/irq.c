@@ -23,11 +23,12 @@
  **/
 
 #include "irq.h"
+#include "marco.h"
 
 static const char irq_message[] __attribute__((used)) =
     "Unhandled processor exception or interrupt";
 
-__attribute__((naked))
+__attribute__((naked, NO_OPTIMIZATION))
 static void irq_terminal()
 {
     __asm__ (
