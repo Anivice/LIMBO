@@ -52,6 +52,7 @@ add_library(limbo SHARED
         src/basic/page.c        src/include/page.h
         src/basic/syscall.c     src/include/syscall.h
         src/basic/ldt.c         src/include/ldt.h
+        src/include/errno.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)

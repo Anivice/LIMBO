@@ -40,7 +40,7 @@ void printk(const char * fmt, ...);
  * @param c Character
  * @return NONE
  */
-void put(char c);
+void put(char c, uint8_t);
 
 /*!
  * @brief Translate escape code into meaningful actions

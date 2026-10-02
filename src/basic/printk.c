@@ -87,9 +87,9 @@ static void putc(const char c, const uint8_t attr)
     set_cursor_loc((uint16_t)pos);
 }
 
-void put(const char c)
+void put(const char c, const uint8_t attr)
 {
-    putc(c, 0x07);
+    putc(c, attr);
 }
 
 /*!

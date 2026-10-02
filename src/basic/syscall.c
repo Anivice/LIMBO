@@ -2,9 +2,10 @@
 #include "printk.h"
 #include "types.h"
 #include "idt.h"
+#include "errno.h"
 
 __attribute__((naked))
-void isr_0x80 (void)
+void isr_0x80 ()
 {
     __asm__ __volatile__ (
         "push       %ebp                    \n\t"
@@ -47,16 +48,18 @@ int32_t syscall_req_dispatcher(
 {
     switch (entry)
     {
-        case 0x01:
-            put((char)param1);
+        case SYS_FORK: // fork();
+            return -ENOSYS;
+        case SYS_PUT_FRAME_TO_CONSOLE_WITH_ATTR:
+            put((char)(param1 & 0xFF), param2 == 0 ? 0x07 : (uint8_t)(param2 & 0xFF));
             return 0;
 
         default:
-            return -1;
+            return -ENOSYS;
     }
 }
 
-void init_syscall (void)
+void init_syscall ()
 {
     idt_set_gate(0x80, (uint32_t)(void*)isr_0x80, 0x10, 0xEE);
 }

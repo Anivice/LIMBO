@@ -94,7 +94,7 @@ void build_and_iret(int_frame_privchg_t *f)
  */
 [[noreturn, gnu::section(".kernel_entry_point")]]
 // __attribute__((section(".kernel_entry_point")))
-void main(int32_t argc, int32_t *argv)
+void main(const int32_t argc, const int32_t *argv)
 {
     install_irq();
 
@@ -106,6 +106,7 @@ void main(int32_t argc, int32_t *argv)
         die("Kernel data corrupted");
     }
 
+    enable_fpu();
     uint32_t below_16MB = (uint32_t)argv[0] * 1024u;
     uint32_t beyond_16MB = (uint32_t)argv[1] * 64u * 1024u;
     bool memory_hole = (beyond_16MB != 0) &&
@@ -126,34 +127,6 @@ void main(int32_t argc, int32_t *argv)
     {
         die("Memory hole in lower 16MB part");
     }
-
-    // char * p = (char*)0x200000;
-    // (void)disk_read(p, 0, 1);
-    // segment_descriptor_t * descriptor = LOCAL_DESCRIPTOR_TABLE;
-    // memset(descriptor, 0, sizeof(segment_descriptor_t));
-    // descriptor[1] = make_descriptor(0, 0x000FFFFF, 0xFA, 0xC0);
-    // descriptor[2] = make_descriptor(0, 0x000FFFFF, 0xF2, 0xC0);
-    //
-    // tss_descriptor_t * tss = TASK_STATE_SEGMENT;
-    // uint32_t helper = 0;
-    // __asm__ volatile ("mov %%ds, %%eax" : "=a"(helper) ::);
-    // tss->ss0 = helper;
-    // __asm__ volatile ("mov %%esp, %%eax" : "=a"(helper) ::);
-    // tss->esp0 = helper;
-    // tss->iomap_base = sizeof(*tss);
-    // tss->eip = (uint32_t)0x200000;
-    // __asm__ volatile ("mov %%cs, %%eax" : "=a"(helper) ::);
-    // tss->cs = helper;
-    //
-    // int_frame_privchg_t frame = {
-    //     .eip = (uint32_t)0x200000,
-    //     .cs = 0xF,
-    //     .eflags = 0x202,
-    //     .user_esp = (uint32_t)0x200FFF,
-    //     .user_ss = (uint32_t)0x17,
-    // };
-    //
-    // build_and_iret(&frame);
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point");
