@@ -101,11 +101,12 @@ static void rtc_irq_handler()
 NO_PLEASE_DONT_OPTIMIZE
 void rtc_irq_init()
 {
+    uptime = UINT64_MAX;
     const uint32_t flags = rtc_irq_save();
     idt_set_gate(0x70, (uint32_t)rtc_irq_handler, 0x10, 0x8E);
 
     outb(0x70, RTC_REGISTER_B);
-    uint8_t b = inb(0x71);
+    const uint8_t b = inb(0x71);
     outb(0x70, RTC_REGISTER_B);
     outb(0x71, (b & 0x0F) | 0x10);
 

@@ -107,6 +107,7 @@ void main(const int32_t argc, const int32_t *argv)
     }
 
     enable_fpu();
+    rtc_irq_init();
     uint32_t below_16MB = (uint32_t)argv[0] * 1024u;
     uint32_t beyond_16MB = (uint32_t)argv[1] * 64u * 1024u;
     bool memory_hole = (beyond_16MB != 0) &&
