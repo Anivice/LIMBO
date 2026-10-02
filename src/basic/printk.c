@@ -65,7 +65,7 @@ static void scroll_one_line()
  * @param attr Color attribute
  * @return NONE
  */
-void putc(const char c, const uint8_t attr)
+static void putc(const char c, const uint8_t attr)
 {
     if (!c) return;
     uint16_t cursor_pos = get_cursor_loc();
@@ -114,7 +114,7 @@ void put(const char c)
  * @param base16 Is base16 mode active
  * @return NONE
  */
-void print_num(uint64_t num, const uint8_t attr, const bool base16)
+static void print_num(uint64_t num, const uint8_t attr, const bool base16)
 {
     uint32_t p = 0;
     int i = 0;
@@ -151,7 +151,7 @@ void print_num(uint64_t num, const uint8_t attr, const bool base16)
  * @param attr Color attributes
  * @return NONE
  */
-void print_signed(int num, const uint8_t attr)
+static void print_signed(int num, const uint8_t attr)
 {
     uint32_t unsigned_num = *(uint32_t*)&num;
     if ((unsigned_num & 0x80000000) != 0) {
@@ -163,7 +163,7 @@ void print_signed(int num, const uint8_t attr)
     print_num(unsigned_num, attr, false);
 }
 
-void print_64bit_signed(int64_t num, const uint8_t attr)
+static void print_64bit_signed(int64_t num, const uint8_t attr)
 {
     uint64_t unsigned_num = *(uint64_t*)&num;
     if ((unsigned_num & 0x8000000000000000) != 0) {
@@ -182,7 +182,7 @@ void print_64bit_signed(int64_t num, const uint8_t attr)
  * @param attr Color attributes
  * @return NONE
  */
-void print_double(double value, const int precision, const uint8_t attr)
+static void print_double(double value, const int precision, const uint8_t attr)
 {
     uint64_t int_part = 0;
     double frac_part;
@@ -289,7 +289,7 @@ escape_actions_t escape(const char code)
  * @param attr Color attributes
  * @return NOTHING
  */
-void puts(const char *str, const uint8_t attr)
+static void puts(const char *str, const uint8_t attr)
 {
     while (*str) {
         putc(*str, attr);

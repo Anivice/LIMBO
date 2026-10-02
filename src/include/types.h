@@ -67,16 +67,16 @@ typedef struct ldt_descriptor_t__ {
 typedef struct tss_descriptor_t__
 {
     uint32_t prev_tss:16;
-    uint32_t __reserved_0:16;
+    uint32_t _reserved_0:16;
     uint32_t esp0;
     uint32_t ss0:16;
-    uint32_t __reserved_1:16;
+    uint32_t _reserved_1:16;
     uint32_t esp1;
     uint32_t ss1:16;
-    uint32_t __reserved_2:16;
+    uint32_t _reserved_2:16;
     uint32_t esp2;
     uint32_t ss2:16;
-    uint32_t __reserved_3:16;
+    uint32_t _reserved_3:16;
     uint32_t cr3;
     uint32_t eip;
     uint32_t eflags;
@@ -89,20 +89,20 @@ typedef struct tss_descriptor_t__
     uint32_t esi;
     uint32_t edi;
     uint32_t es:16;
-    uint32_t __reserved_4:16;
+    uint32_t _reserved_4:16;
     uint32_t cs:16;
-    uint32_t __reserved_5:16;
+    uint32_t _reserved_5:16;
     uint32_t ss:16;
-    uint32_t __reserved_6:16;
+    uint32_t _reserved_6:16;
     uint32_t ds:16;
-    uint32_t __reserved_7:16;
+    uint32_t _reserved_7:16;
     uint32_t fs:16;
-    uint32_t __reserved_8:16;
+    uint32_t _reserved_8:16;
     uint32_t gs:16;
-    uint32_t __reserved_9:16;
+    uint32_t _reserved_9:16;
     uint32_t ldt_selector:16;
-    uint32_t __reserved_10:16;
-    uint32_t __reserved_11:16;
+    uint32_t _reserved_10:16;
+    uint32_t _reserved_11:16;
     uint32_t iomap_base:16;
 } __attribute__((packed)) tss_descriptor_t;
 
@@ -130,7 +130,7 @@ typedef struct page_dir_t__ {
     uint32_t PCD:1;             // Page-level Cache Disable
     uint32_t A:1;               // Accessed, set by CPU, used as indicator for swap
     uint32_t D:1;               // Dirty, set by CPU, means it wrote data to the page, used as async cache flush indicator
-    uint32_t ___reserved_0__:1; // ignored, and always 0
+    uint32_t _reserved_0_:1; // ignored, and always 0
     uint32_t G:1;               // Global, used in high speed cache. Global means page will always be inside high speed cache
     uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
     uint32_t page_dir_base:20;  // Page directory base address

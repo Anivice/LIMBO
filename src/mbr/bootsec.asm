@@ -72,6 +72,8 @@ print_num: ;print_num(ax=num)
     popa
     ret
 
+; TODO: this discards the BIOS-provided boot-drive number and always read floppy A.
+; TODO: maybe read BIOS-provided boot drive? but the floppy disk can only boot from A anyways.
 read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di note: this code supports only 17 sectors at most
     pusha
     mov             bx,                     ax      ; save ax parameter to bx
@@ -108,6 +110,16 @@ read_disk:  ; read_disk(al=sector_count,ah=starting_sector) ==> es:di note: this
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 start:
+    ; first, we need to establish the initial stack frame positions
+    cli                                                                     ; disable maskable hardware interrupts
+    xor             ax,                     ax                              ; ax = 0
+    mov             ss,                     ax                              ; ss = 0
+    mov             sp,                     0x7C00                          ; sp = 0x7C00, sp decreases on push
+    mov             ds,                     ax                              ; ds = 0
+    mov             es,                     ax                              ; es = 0
+    cld                                                                     ; clear direction flag
+    sti                                                                     ; enable maskable hardware interrupts
+
     ; print info
     xor             cx,                     cx                              ; clear cx
     mov             ds,                     cx                              ; use zeroed out'd cx to clear ds, ds is used as ds:bp for print_msg
@@ -151,8 +163,8 @@ start:
     dec             al
     mov             ah,                     3                               ; read starting from the third sector
 
-    ; we don't proceed if loader is larger than 17 sectors
-    cmp             al,                     16
+    ; we don't proceed if loader is larger than 16 sectors
+    cmp             al,                     15
     jle             .continue
 
     xor             cx,                     cx

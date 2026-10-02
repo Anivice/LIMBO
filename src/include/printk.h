@@ -25,6 +25,8 @@
 #ifndef PRINTK_H
 #define PRINTK_H
 
+#include "types.h"
+
 /*!
  * @brief C-style printf-like message printer
  * @param fmt Print format
@@ -39,5 +41,12 @@ void printk(const char * fmt, ...);
  * @return NONE
  */
 void put(char c);
+
+/*!
+ * @brief Translate escape code into meaningful actions
+ * @param code Escape code
+ * @return Action determined by provided code
+ */
+escape_actions_t escape(char code);
 
 #endif //PRINTK_H

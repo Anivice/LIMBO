@@ -24,6 +24,7 @@
 
 #include "string.h"
 #include "types.h"
+#include "printk.h"
 
 void memset(void * dest, const int val, const uint32_t size)
 {
@@ -71,7 +72,7 @@ int memcmp(const void * s1, const void * s2, uint32_t n)
  * @param buffer_len Buffer max length
  * @return NONE
  */
-void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     if (*offset + 1 < buffer_len)
     {
@@ -90,7 +91,7 @@ void sputc(const char c, char * buffer, uint32_t * offset, const uint32_t buffer
  * @param buffer_len Buffer max length
  * @return NONE
  */
-void sprint_num(uint64_t num, const bool base16, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sprint_num(uint64_t num, const bool base16, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     uint32_t p = 0;
     int i = 0;
@@ -126,9 +127,10 @@ void sprint_num(uint64_t num, const bool base16, char * buffer, uint32_t * offse
  * @param num Signed number
  * @param buffer String buffer
  * @param offset Current string offset
+ * @param buffer_len Buffer max length
  * @return NONE
  */
-void sprint_signed(int num, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sprint_signed(int num, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     uint32_t unsigned_num = *(uint32_t*)&num;
     if ((unsigned_num & 0x80000000) != 0) {
@@ -145,9 +147,10 @@ void sprint_signed(int num, char * buffer, uint32_t * offset, const uint32_t buf
  * @param num Signed number
  * @param buffer String buffer
  * @param offset Current string offset
+ * @param buffer_len Buffer max length
  * @return NONE
  */
-void sprint_64bit_signed(int64_t num, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sprint_64bit_signed(int64_t num, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     uint64_t unsigned_num = *(uint64_t*)&num;
     if ((unsigned_num & 0x8000000000000000) != 0) {
@@ -165,9 +168,10 @@ void sprint_64bit_signed(int64_t num, char * buffer, uint32_t * offset, const ui
  * @param precision Precision (decimal count)
  * @param buffer String buffer
  * @param offset Current string offset
+ * @param buffer_len Buffer max length
  * @return NONE
  */
-void sprint_double(double value, const int precision, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sprint_double(double value, const int precision, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     uint64_t int_part = 0;
     double frac_part;
@@ -216,20 +220,14 @@ void sprint_double(double value, const int precision, char * buffer, uint32_t * 
 }
 
 /*!
- * @brief Translate escape code into meaningful actions
- * @param code Escape code
- * @return Action determined by provided code
- */
-escape_actions_t escape(char code);
-
-/*!
  * @brief Print a null-terminated const char * string
  * @param str String to print
  * @param buffer String buffer
  * @param offset Current string offset
+ * @param buffer_len Buffer max length
  * @return NOTHING
  */
-void sputs(const char *str, char * buffer, uint32_t * offset, const uint32_t buffer_len)
+static void sputs(const char *str, char * buffer, uint32_t * offset, const uint32_t buffer_len)
 {
     while (*str) {
         sputc(*str, buffer, offset, buffer_len);
@@ -351,7 +349,7 @@ int strlen(const char * s)
     return len;
 }
 
-int strnlen(const char * s, int maxlen)
+int strnlen(const char * s, const int maxlen)
 {
     int len = 0;
     while (s[len] != '\0')

@@ -28,6 +28,9 @@ GPU_REGISTER_INDEX      equ 0x3d4
 GPU_CURSOR_H8_BIT       equ 0x0e
 GPU_CURSOR_L8_BIT       equ 0x0f
 GPU_INDEXED_REG_IO      equ 0x3d5
+KERNEL_FIRST_LBA        equ 18
+KERNEL_SECTORS          equ 1199
+KERNEL_BYTES            equ KERNEL_SECTORS * 512
 
 [bits 16]                                   ; 16-bit mode
 
@@ -254,7 +257,7 @@ _entry_point: ; _entry_point()
     mov         ax,                     0x9E0
     mov         es,                     ax
     xor         bx,                     bx
-    mov         ax,                     18
+    mov         ax,                     KERNEL_FIRST_LBA
     .loop:
         xor     di,                     di
         call    lba_to_chs
@@ -268,9 +271,9 @@ _entry_point: ; _entry_point()
         call    print
 
         inc     ax
+        cmp     ax,                     KERNEL_SECTORS+KERNEL_FIRST_LBA
+        jae     .end_loop
 
-        cmp     ax,                     1199+18
-        jg      .end_loop
         mov     bx,                     es
         add     bx,                     512/16
         mov     es,                     bx
@@ -397,6 +400,7 @@ _entry_point: ; _entry_point()
 
     ; enable A20
     in          al,                     0x92
+    and         al,                     1111_1110B      ; do not assert the fast-reset bit
     or          al,                     0000_0010B
     out         0x92,                   al
 
@@ -767,7 +771,7 @@ greet:
     db "[LIMBO LOADER]: Loader is now reading 32bit kernel...", 0x0D, 0x0A, 0x00
 
 fda_msg: db "[LIMBO LOADER FDA]: Reading sector ", 0x00
-fda_msg2: db " / 1217", 0x0D, 0x00
+fda_msg2: db " / 1216", 0x0D, 0x00 ; 0 - 1216, 1199+18 = 1217 sectors.
 fda_nl:  db 0x0D,0x0A, 0x00
 
 floppy_disk_err:
