@@ -29,6 +29,8 @@
 #include "die.h"
 #include "marco.h"
 #include "page.h"
+#include "abs/bitmap.h"
+#include "abs/page_allocator.h"
 
 /*!
  * @brief Enable FPU
@@ -97,28 +99,46 @@ void main(const int32_t argc, const uint8_t *argv)
     enable_fpu();
     page_init();
 
-    // get memory info, loader gives it to us from the BIOS
+    // We need to setup a usable memory model here:
+
+    // 1. get memory info, loader gives it to us from the BIOS
     int entries = argc / (int)sizeof(e820_entry_t);
     if (argc % (int)sizeof(e820_entry_t) != 0)
         die("Loader gives unaligned entries"); // FUCK
 
+    // entire 128KB -> 4GB map
+    bitmap_t page_alloc_bitmap = {
+        .particles_ = page_alloc_bitmap_particles,
+        .data_array_ = page_alloc_bitmap_start
+    };
+    memset(page_alloc_bitmap_start, 0x00, page_alloc_bitmap_size); // all free
+
+    // now, we need to allocate 128KB for a bitmap, bitmap is for the entire 4GB page entries
+    for (const uint8_t * i = page_alloc_bitmap_start;
+        i < page_alloc_bitmap_end;
+        i += 4096)
+    {
+        page_entry_set_present((uint32_t)i, 1); // reachable
+        set_bit(&page_alloc_bitmap, (uint32_t)(i) / 4096, 1); // owned, not allocable
+    }
+
     char buff [32];
     printk("Memory layout:\n");
-    uint64_t celling = 0;
     for (int i = 0; i < entries; i++)
     {
         e820_entry_t entry;
         memcpy(&entry, argv + sizeof(e820_entry_t) * i, sizeof(entry));
-        celling = entry.base + entry.length;
         printk("Range: [0x%X, 0x%X), %s, type: ", entry.base, entry.base + entry.length,
             value_to_human(buff, sizeof(buff), entry.length));
         switch (entry.type) { //  1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
-            case 1: printk("usable"); break;
+            case 1: printk("usable");
+            break;
             case 2: { // evict reserved entries
                 printk("reserved");
                 auto const length = entry.length / 4096 + (entry.length % 4096 == 0 ? 0 : 1);
                 for (uint64_t j = 0; j < length; j++) {
-                    page_entry_set_present(entry.base + j * 4096, 0);
+                    page_entry_set_present(entry.base + j * 4096, 0); // reserved are explicitly evicted
+                    set_bit(&page_alloc_bitmap, (entry.base + j * 4096) / 4096, 1); // reserved, not allocable
                 }
             }
             break;
@@ -137,13 +157,14 @@ void main(const int32_t argc, const uint8_t *argv)
     page_entry_set_present(0xB8000, 1); // VRAM
     for (uint32_t i = 0x90000; i < 0x9FC00; i += 4096) {
         page_entry_set_present(i, 1); // Kernel stacks
+        set_bit(&page_alloc_bitmap, i / 4096, 1); // KSS, not allocable
     }
 
     // evict common address spaces:
     for (uint32_t i = 0; i < 0x90000; i += 4096) {
         page_entry_set_present(i, 0);
     }
-    for (uint64_t i = 0x197000; i < celling; i += 4096) {
+    for (uint64_t i = 0x196000; i < 1024*1024*1024*4ULL; i += 4096) {
         page_entry_set_present(i, 0);
     }
 
@@ -160,6 +181,7 @@ void main(const int32_t argc, const uint8_t *argv)
          addr += 4096)
     {
         page_entry_set_present((uint32_t)addr, 1);
+        set_bit(&page_alloc_bitmap, addr / 4096, 1); // GDTR, not allocable
     }
 
     page_enable();
@@ -168,8 +190,16 @@ void main(const int32_t argc, const uint8_t *argv)
 
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
-    // int a = 12 / 0;
-    // *(int*)(1024 * 1024 * 24) = 12;
+    int free_pages = 0;
+    for (uint64_t i = 0; i < page_alloc_bitmap_particles; i++)
+    {
+        if (!get_bit(&page_alloc_bitmap, i)) {
+            put('X', 0x07);
+            ++free_pages;
+        }
+    }
+
+    printk("free_pages: %d\n", free_pages);
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");

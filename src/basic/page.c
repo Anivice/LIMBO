@@ -3,8 +3,8 @@
 #include "types.h"
 #include "marco.h"
 
-static __attribute__((aligned(4096))) page_dir_t page_directory[1024];
-static __attribute__((aligned(4096))) page_t page_table[1024];
+__attribute__((aligned(4096))) page_dir_t page_directory[1024];
+__attribute__((aligned(4096))) page_t page_table[1024];
 
 void page_init()
 {
