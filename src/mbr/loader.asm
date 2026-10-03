@@ -782,7 +782,7 @@ memory_err:
 
 greet32:
     db "===============================================================================", 0x0A
-    db "       LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1        ", 0x0A
+    db "  LITTLE I386 MICROKERNEL BAREMETAL OS KERNEL LOADER VERSION 0.0.1, IN 32BIT   ", 0x0A
     db "===============================================================================", 0x0A, 0x00
 
 msg_done: db "[LIMBO LOADER]: 32bit Protected Mode is now active.", 0x0A, 0x00
