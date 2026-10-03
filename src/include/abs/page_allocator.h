@@ -1,6 +1,15 @@
 #ifndef LIMBO_PAGE_ALLOCATOR_H
 #define LIMBO_PAGE_ALLOCATOR_H
 
+/*
+ * [0, 0x196000)                | Reserved by LIMBO: 406 pages,
+ *                              |   including low memory, bitmap, stack, kernel, and paging structures
+ * [0x196000, RAM − 0x20000)    | Allocatable
+ * [RAM − 0x20000, RAM)         | Firmware reservation: 32 pages
+ *
+ * expected free pages = RAM_in_MiB × 256 − 406 − 32
+ */
+
 #include "bitmap.h"
 
 #define page_alloc_bitmap_start     ((uint8_t*)(void*)(256u*1024))
