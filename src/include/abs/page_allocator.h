@@ -20,4 +20,11 @@ typedef struct page_alloc_bitmap_t {
  */
 [[nodiscard]] uint64_t allocate_page(page_alloc_bitmap_t * this);
 
+/*!
+ * Free a page.
+ * @param this page allocator context
+ * @param page page number
+ */
+void free_page(page_alloc_bitmap_t * this, uint64_t page);
+
 #endif //LIMBO_PAGE_ALLOCATOR_H

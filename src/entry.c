@@ -31,6 +31,7 @@
 #include "page.h"
 #include "abs/bitmap.h"
 #include "abs/page_allocator.h"
+#include "abs/random.h"
 
 /*!
  * @brief Enable FPU
@@ -228,6 +229,8 @@ void main(const int32_t argc, const uint8_t *argv)
 
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
+    init_genrand((uint32_t)rtc_get_uptime() ^ 0xDEADBEEF);
+
     int free_pages = 0;
     for (uint64_t i = 0; i < page_alloc_bitmap_particles; i++)
     {
@@ -245,24 +248,7 @@ void main(const int32_t argc, const uint8_t *argv)
         .free_pages = free_pages
     };
 
-    uint64_t new_page, allocated_pages = 0;
-    while ((new_page = allocate_page(&page_alloc_object)) != UINT64_MAX) {
-        printk("Allocated a new page %U\n", new_page);
-        ++allocated_pages;
-    }
-
-    printk("Allocated %U pages\n", allocated_pages);
-
-    free_pages = 0;
-    for (uint64_t i = 0; i < page_alloc_bitmap_particles; i++)
-    {
-        if (!get_bit(&page_alloc_bitmap, i)) {
-            ++free_pages;
-        }
-    }
-
-    printk("free_pages: %d, usable memory: %s\n", free_pages,
-        value_to_human(buff, sizeof(buff), free_pages * 4096));
+    while (true) (void)allocate_page(&page_alloc_object); // trigger OOM
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point");

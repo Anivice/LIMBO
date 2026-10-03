@@ -61,8 +61,8 @@ add_library(limbo SHARED
         src/include/errno.h
         src/abs/bitmap.c        src/include/abs/bitmap.h
         src/include/assert.h
-        src/include/abs/page_allocator.h
-        src/abs/page_allocator.c
+        src/include/abs/page_allocator.h src/abs/page_allocator.c
+        src/abs/random.c        src/include/abs/random.h
 )
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)

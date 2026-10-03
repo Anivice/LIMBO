@@ -146,7 +146,7 @@ static void int_dispatcher(const int num, const uint32_t eip, const uint32_t err
         case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25:
         case 26: case 27: case 28: case 29: case 30: case 31:
             printk("fatal error (INT %d) at position 0x%x, error 0x%x\n", num, eip, err);
-            die("FATAL\n");
+            die("FATAL");
         default:
             printk("CPU interrupt: %d, at position 0x%x, error 0x%x\n", num, eip, err);
     }
