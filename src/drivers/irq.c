@@ -61,17 +61,23 @@ static void pic_remap()
     pic_write(0xA1, 0xFF);
 }
 
-#define IRQ_STUB(n)                                                     \
+#define IRQ_STUB_IMPL(n, error_setup)                                  \
     __attribute__((naked, used, NO_OPTIMIZATION))                       \
     static void irq_stub_##n(void) {                                    \
         __asm__ __volatile__(                                           \
+            error_setup                                                 \
             "pushl $" #n "\n\t"      /* push vector number */           \
             "jmp irq_common\n\t"                                        \
         );                                                              \
     }
 
-IRQ_STUB(0) IRQ_STUB(1) IRQ_STUB(2) IRQ_STUB(3) IRQ_STUB(4) IRQ_STUB(5) IRQ_STUB(6) IRQ_STUB(7) IRQ_STUB(8) IRQ_STUB(9)
-IRQ_STUB(10) IRQ_STUB(11) IRQ_STUB(12) IRQ_STUB(13) IRQ_STUB(14) IRQ_STUB(15) IRQ_STUB(16) IRQ_STUB(17) IRQ_STUB(18)
+/* Normalize the frame: vector, error code, EIP, CS, EFLAGS. */
+#define IRQ_STUB(n) IRQ_STUB_IMPL(n, "pushl $0\n\t")
+#define IRQ_ERR_STUB(n) IRQ_STUB_IMPL(n, "")
+
+/* CPU-pushed error codes on the configured Pentium III target. */
+IRQ_STUB(0) IRQ_STUB(1) IRQ_STUB(2) IRQ_STUB(3) IRQ_STUB(4) IRQ_STUB(5) IRQ_STUB(6) IRQ_STUB(7) IRQ_ERR_STUB(8) IRQ_STUB(9)
+IRQ_ERR_STUB(10) IRQ_ERR_STUB(11) IRQ_ERR_STUB(12) IRQ_ERR_STUB(13) IRQ_ERR_STUB(14) IRQ_STUB(15) IRQ_STUB(16) IRQ_ERR_STUB(17) IRQ_STUB(18)
 IRQ_STUB(19) IRQ_STUB(20) IRQ_STUB(21) IRQ_STUB(22) IRQ_STUB(23) IRQ_STUB(24) IRQ_STUB(25) IRQ_STUB(26) IRQ_STUB(27)
 IRQ_STUB(28) IRQ_STUB(29) IRQ_STUB(30) IRQ_STUB(31) IRQ_STUB(32) IRQ_STUB(33) IRQ_STUB(34) IRQ_STUB(35) IRQ_STUB(36)
 IRQ_STUB(37) IRQ_STUB(38) IRQ_STUB(39) IRQ_STUB(40) IRQ_STUB(41) IRQ_STUB(42) IRQ_STUB(43) IRQ_STUB(44) IRQ_STUB(45)
@@ -102,6 +108,10 @@ IRQ_STUB(236) IRQ_STUB(237) IRQ_STUB(238) IRQ_STUB(239) IRQ_STUB(240) IRQ_STUB(2
 IRQ_STUB(244) IRQ_STUB(245) IRQ_STUB(246) IRQ_STUB(247) IRQ_STUB(248) IRQ_STUB(249) IRQ_STUB(250) IRQ_STUB(251)
 IRQ_STUB(252) IRQ_STUB(253) IRQ_STUB(254) IRQ_STUB(255)
 
+#undef IRQ_ERR_STUB
+#undef IRQ_STUB
+#undef IRQ_STUB_IMPL
+
 typedef void (*irq_stub_t)();
 
 irq_stub_t const irq_stub_table[256] =
@@ -125,8 +135,8 @@ irq_stub_t const irq_stub_table[256] =
 #undef E
 };
 
-__attribute__((used))
-static void int_dispatcher(const int num, const uint32_t eip)
+__attribute__((used, force_align_arg_pointer))
+static void int_dispatcher(const int num, const uint32_t eip, const uint32_t err)
 {
     switch (num)
     {
@@ -135,10 +145,10 @@ static void int_dispatcher(const int num, const uint32_t eip)
         case 14: // Page Fault
         case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25:
         case 26: case 27: case 28: case 29: case 30: case 31:
-            printk("fatal error (INT %d) at position 0x%x\n", num, eip);
+            printk("fatal error (INT %d) at position 0x%x, error 0x%x\n", num, eip, err);
             die("FATAL\n");
         default:
-            printk("CPU interrupt: %d, at position 0x%x\n", num, eip);
+            printk("CPU interrupt: %d, at position 0x%x, error 0x%x\n", num, eip, err);
     }
 }
 
@@ -181,16 +191,21 @@ static void irq_common()
          *  40  %ecx
          *  44  %eax
          *  48  vector N          <-- pushed by irq_stub_N
-         *  52  EIP               <-- iret destination
-         *  56  CS
-         *  60  EFLAGS
+         *  52  error code        <-- CPU-supplied, or synthetic zero
+         *  56  EIP               <-- iret destination
+         *  60  CS
+         *  64  EFLAGS
          */
 
-        /* cdecl: push args right-to-left */
-        "pushl  52(%esp)            \n\t"  /* 2nd arg: iret EIP  */
-        "pushl  52(%esp)            \n\t"  /* 1st arg: irq number */
+        /* cdecl: int_dispatcher(num, eip, err), right-to-left.
+         * Each push moves ESP, so subsequent offsets include that change.
+         * The dispatcher realigns its C stack for arbitrary interrupt ESP.
+         */
+        "pushl  52(%esp)            \n\t"  /* 3rd arg: error code */
+        "pushl  60(%esp)            \n\t"  /* 2nd arg: saved EIP  */
+        "pushl  56(%esp)            \n\t"  /* 1st arg: vector     */
         "call   int_dispatcher      \n\t"
-        "add    $8,         %esp    \n\t"  /* clean up args       */
+        "add    $12,        %esp    \n\t"  /* clean up arguments  */
 
         /* Restore everything */
         "pop    %gs                 \n\t"
@@ -198,7 +213,7 @@ static void irq_common()
         "pop    %es                 \n\t"
         "pop    %ds                 \n\t"
         "popa                       \n\t"
-        "add    $4,         %esp    \n\t"  /* drop vector number  */
+        "add    $8,         %esp    \n\t"  /* drop vector + error */
         "iret                       \n\t"
     );
 }

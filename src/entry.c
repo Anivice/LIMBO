@@ -169,7 +169,7 @@ void main(const int32_t argc, const uint8_t *argv)
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
     // int a = 12 / 0;
-    *(int*)(1024 * 1024 * 24) = 12;
+    // *(int*)(1024 * 1024 * 24) = 12;
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
