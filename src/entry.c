@@ -111,16 +111,8 @@ void main(const int32_t argc, const uint8_t *argv)
         .particles_ = page_alloc_bitmap_particles,
         .data_array_ = page_alloc_bitmap_start
     };
-    memset(page_alloc_bitmap_start, 0x00, page_alloc_bitmap_size); // all free
-
-    // now, we need to allocate 128KB for a bitmap, bitmap is for the entire 4GB page entries
-    for (const uint8_t * i = page_alloc_bitmap_start;
-        i < page_alloc_bitmap_end;
-        i += 4096)
-    {
-        page_entry_set_present((uint32_t)i, 1); // reachable
-        set_bit(&page_alloc_bitmap, (uint32_t)(i) / 4096, 1); // owned, not allocable
-    }
+    /* Unknown addresses are unavailable until E820 explicitly supplies RAM. */
+    memset(page_alloc_bitmap_start, 0xFF, page_alloc_bitmap_size);
 
     char buff [32];
     printk("Memory layout:\n");
@@ -131,17 +123,21 @@ void main(const int32_t argc, const uint8_t *argv)
         printk("Range: [0x%X, 0x%X), %s, type: ", entry.base, entry.base + entry.length,
             value_to_human(buff, sizeof(buff), entry.length));
         switch (entry.type) { //  1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
-            case 1: printk("usable");
-            break;
-            case 2: { // evict reserved entries
-                printk("reserved");
-                auto const length = entry.length / 4096 + (entry.length % 4096 == 0 ? 0 : 1);
-                for (uint64_t j = 0; j < length; j++) {
-                    page_entry_set_present(entry.base + j * 4096, 0); // reserved are explicitly evicted
-                    set_bit(&page_alloc_bitmap, (entry.base + j * 4096) / 4096, 1); // reserved, not allocable
+            case 1: {
+                printk("usable");
+                const uint64_t limit = 1ULL << 32;
+                if (entry.base < limit && entry.length != 0) {
+                    const uint64_t bytes = MIN(entry.length, limit - entry.base);
+                    const uint64_t end = (entry.base + bytes) & ~0xFFFULL;
+                    /* Only whole pages contained in usable RAM are free. */
+                    for (uint64_t addr = (entry.base + 0xFFFULL) & ~0xFFFULL;
+                         addr < end; addr += 4096) {
+                        set_bit(&page_alloc_bitmap, addr / 4096, 0);
+                    }
                 }
+                break;
             }
-            break;
+            case 2: printk("reserved"); break;
             case 3: printk("ACPI reclaimable"); break;
             case 4: printk("ACPI NVS"); break;
             default: printk("%u", entry.type); break;
@@ -149,10 +145,46 @@ void main(const int32_t argc, const uint8_t *argv)
         printk("\n");
     }
 
-    printk("Range: [0x90000, 0x9FC00): kernel stacks.\n");
+    /* Non-RAM wins over overlapping usable entries, regardless of order.
+     * Keep ACPI reclaimable/NVS and unknown types unavailable as well.
+     */
+    for (int i = 0; i < entries; ++i) {
+        e820_entry_t entry;
+        memcpy(&entry, argv + sizeof(entry) * i, sizeof(entry));
+        const uint64_t limit = 1ULL << 32;
+        if (entry.type == 1 || entry.length == 0 || entry.base >= limit)
+            continue;
+        const uint64_t bytes = MIN(entry.length, limit - entry.base);
+        const uint64_t end = entry.base + bytes;
+        for (uint64_t addr = entry.base & ~0xFFFULL;
+             addr < end; addr += 4096) {
+            page_entry_set_present((uint32_t)addr, 0);
+            set_bit(&page_alloc_bitmap, addr / 4096, 1);
+        }
+    }
+
+    /* The fixed bitmap storage must be usable RAM, not firmware storage. */
+    for (uint32_t addr = (uint32_t)page_alloc_bitmap_start;
+         addr < (uint32_t)page_alloc_bitmap_end; addr += 4096) {
+        if (get_bit(&page_alloc_bitmap, addr / 4096))
+            die("Page allocator bitmap is not backed by usable RAM");
+    }
+
+    /* Retain low memory for the loader/firmware/stack and reserve the entire
+     * loaded kernel, including its paging structures and symbol map.
+     * Mapping a page and owning a physical frame are separate decisions.
+     */
+    for (uint32_t addr = 0;
+         addr < ((0x100000u + KERNEL_IMAGE_BYTES + 0xFFFu) & ~0xFFFu);
+         addr += 4096) {
+        set_bit(&page_alloc_bitmap, addr / 4096, 1);
+    }
+
+    printk("Range: [0x40000, 0x60000):   Memory Bitmap.\n");
+    printk("Range: [0x90000, 0x9FC00):   Kernel Stacks.\n");
     printk("Range: [0x100000, 0x178000): Kernel code slot: 480 KiB.\n");
-    printk("Range: [0x178000, 0x18E000): Kernel data slot: 88 KiB, containing .rodata, .data, .bss, and COMMON.\n");
-    printk("Range: [0x18E000, 0x195DF9): Symbol-map storage and padding.\n");
+    printk("Range: [0x178000, 0x18E000): Kernel data slot: 88 KiB.\n");
+    printk("Range: [0x18E000, 0x195DF9): Symbol-map.\n");
     printk("Range: [0x195DF9, 0x195E00): \"Anivice\".\n");
     page_entry_set_present(0xB8000, 1); // VRAM
     for (uint32_t i = 0x90000; i < 0x9FC00; i += 4096) {
@@ -164,7 +196,7 @@ void main(const int32_t argc, const uint8_t *argv)
     for (uint32_t i = 0; i < 0x90000; i += 4096) {
         page_entry_set_present(i, 0);
     }
-    for (uint64_t i = 0x196000; i < 1024*1024*1024*4ULL; i += 4096) {
+    for (uint32_t i = 0x196000; i < 0x400000u; i += 4096) {
         page_entry_set_present(i, 0);
     }
 
@@ -184,6 +216,11 @@ void main(const int32_t argc, const uint8_t *argv)
         set_bit(&page_alloc_bitmap, addr / 4096, 1); // GDTR, not allocable
     }
 
+    for (uint32_t addr = (uint32_t)page_alloc_bitmap_start;
+         addr < (uint32_t)page_alloc_bitmap_end; addr += 4096) {
+        page_entry_set_present(addr, 1);
+    }
+
     page_enable();
     rtc_irq_init();
     __asm__ volatile ("sti" ::: "memory");
@@ -194,12 +231,12 @@ void main(const int32_t argc, const uint8_t *argv)
     for (uint64_t i = 0; i < page_alloc_bitmap_particles; i++)
     {
         if (!get_bit(&page_alloc_bitmap, i)) {
-            put('X', 0x07);
             ++free_pages;
         }
     }
 
-    printk("free_pages: %d\n", free_pages);
+    printk("free_pages: %d, usable memory: %s\n", free_pages,
+        value_to_human(buff, sizeof(buff), free_pages * 4096));
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
