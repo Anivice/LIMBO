@@ -147,11 +147,29 @@ void main(const int32_t argc, const uint8_t *argv)
         page_entry_set_present(i, 0);
     }
 
+    // Set GDT page as present
+    struct {
+        uint16_t limit;
+        uint32_t base;
+    } __attribute__((packed)) gdtr;
+
+    __asm__ volatile ("sgdt %0" : "=m"(gdtr));
+    const uint64_t gdt_end = (uint64_t)gdtr.base + gdtr.limit + 1u;
+    for (uint64_t addr = (uint64_t)gdtr.base & ~0xFFFULL;
+         addr < gdt_end;
+         addr += 4096)
+    {
+        page_entry_set_present((uint32_t)addr, 1);
+    }
+
     page_enable();
     rtc_irq_init();
     __asm__ volatile ("sti" ::: "memory");
 
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
+
+    // int a = 12 / 0;
+    *(int*)(1024 * 1024 * 24) = 12;
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
