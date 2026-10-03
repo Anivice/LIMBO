@@ -55,4 +55,10 @@ void cursor_hide();
 /// Show cursor
 void cursor_show();
 
+/*!
+ * @brief Scroll screen upwards one line
+ * @return NONE
+ */
+void scroll_one_line();
+
 #endif //GPU_H

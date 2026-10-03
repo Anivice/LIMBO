@@ -1,5 +1,6 @@
 /*!
  * @file backtracer.c
+ * @brief This file defines a backtrace functionality for GCC C code
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines a backtrace functionality for GCC C code
  **/
 
 #include "backtracer.h"

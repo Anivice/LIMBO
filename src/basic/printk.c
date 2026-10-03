@@ -1,5 +1,6 @@
 /*!
  * @file printk.c
+ * @brief This file defines the kernel side C-style printf-like function
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,52 +20,17 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines the kernel side C-style printf-like function
  */
 
 #include "printk.h"
 #include "gpu.h"
 #include "stdint.h"
 #include "types.h"
-#include "marco.h"
 
 /*!
- * @brief Scroll screen upwards one line
- * @return NONE
- */
-static NO_PLEASE_DONT_OPTIMIZE
-void scroll_one_line()
-{
-    __asm__ __volatile__(
-        "push       %%edi                               \n\t"
-        "pusha                                          \n\t"
-        "mov        $0xB8000,               %%edi       \n\t" // destination
-        "mov        $0xB8000+80*2,          %%esi       \n\t" // src: start of the second line
-        "mov        $2000-80,               %%ecx       \n\t" // { 2000 (all the character on screen) - 80 (first line) } * 2
-        // == all the data on screen except for the first line
-        "cld                                            \n\t" // direction
-        "rep movsw                                      \n\t" // move
-        // now we need to clear all the characters at the bottom of the screen
-        "mov        $0xB8000+1920*2,        %%edi       \n\t" // dest
-        "mov        $80,                    %%ecx       \n\t" // count
-        "scroll_one_line.clear_bottom:                  \n\t"
-        "    movb   $' ',                   (%%edi)     \n\t"
-        "    inc    %%edi                               \n\t"
-        "    movb   $0x07,                  (%%edi)     \n\t"
-        "    inc    %%edi                               \n\t"
-        "loop scroll_one_line.clear_bottom              \n\t"
-        "popa                                           \n\t"
-        "pop        %%edi                               \n\t"
-        :
-        :
-        : "memory", "cc"
-        );
-}
-
-/*!
- * @brief Puc one ASCII character on screen and perform cursor moving and screen scrolling automatically
+ * @brief Put one ASCII character on screen and perform cursor moving and screen scrolling automatically
  * @param c ASCII code to pur on screen
- * @param attr Color attribute
+ * @param attr Color attributes
  * @return NONE
  */
 static void putc(const char c, const uint8_t attr)
@@ -89,13 +55,19 @@ static void putc(const char c, const uint8_t attr)
     set_cursor_loc((uint16_t)pos);
 }
 
+/*!
+ * @brief Put one ASCII character on screen and perform cursor moving and screen scrolling automatically (syscall)
+ * @param c ASCII code to pur on screen
+ * @param attr Color attributes
+ * @return NONE
+ */
 void put(const char c, const uint8_t attr)
 {
     putc(c, attr);
 }
 
 /*!
- * @brief Print unsigned number on screen
+ * @brief Print unsigned number on screen (64bit)
  * @param num Unsigned number
  * @param attr Color attributes
  * @param base16 Is base16 mode active
@@ -134,6 +106,12 @@ static void print_signed(int num, const uint8_t attr)
     print_num(unsigned_num, attr, false);
 }
 
+/*!
+ * @brief Print signed number on screen (64bit)
+ * @param num Signed number
+ * @param attr Color attributes
+ * @return NONE
+ */
 static void print_64bit_signed(int64_t num, const uint8_t attr)
 {
     uint64_t unsigned_num = *(uint64_t*)&num;

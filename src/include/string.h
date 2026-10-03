@@ -32,6 +32,7 @@
  * @param dest Destination
  * @param val Value
  * @param size Buffer size
+ * @return The memset() function returns a pointer to the memory area dest.
  */
 void * memset(void * dest, int val, uint32_t size);
 
@@ -40,6 +41,7 @@ void * memset(void * dest, int val, uint32_t size);
  * @param dest Destinayion
  * @param src Source
  * @param size Size
+ * @return The memcpy() function returns a pointer to dest.
  */
 void * memcpy(void * dest, const void * src, uint32_t size);
 
@@ -74,7 +76,22 @@ int memcmp(const void * s1, const void * s2, uint32_t n);
  */
 uint32_t sprintf(char *buffer, uint32_t buffer_length, const char * fmt, ...);
 
+/*!
+ * @brief The  strlen()  function calculates the length of the string pointed to by s, excluding the terminating null byte ('\0').
+ * @param s String
+ * @return The strlen() function returns the number of bytes in the string pointed to by s.
+ */
 int strlen(const char * s);
+
+/*!
+ * @brief The strnlen() function returns the number of bytes in the string pointed to by s, excluding the terminating null
+ *        byte  ('\0'),  but  at  most  maxlen.  In doing this, strnlen() looks only at the first maxlen characters in the
+ *        string pointed to by s and never beyond s[maxlen-1].
+ * @param s String
+ * @param maxlen String's max length
+ * @return The strnlen() function returns strlen(s), if that is less than maxlen, or maxlen if there is no null terminating
+ * ('\0') among the first maxlen characters pointed to by s.
+ */
 int strnlen(const char * s, int maxlen);
 
 #endif //STRING_H

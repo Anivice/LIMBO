@@ -28,8 +28,8 @@
 #include "stdint.h"
 
 /*!
- * Backtrace stackframe
- * @param addrs Stackframe vector to store result
+ * Backtrace stack frame
+ * @param addrs Stack frame vector to store result
  * @param max_frames Max backtrace
  * @return Number of actually traced frames
  */

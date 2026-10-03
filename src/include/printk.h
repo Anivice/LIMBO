@@ -28,7 +28,26 @@
 #include "types.h"
 
 /*!
- * @brief C-style printf-like message printer
+ * @brief C-style printf-like message printer.\n
+ * WARNING: it uses its own derivatives for color codes and numbers/strings:\n
+ * %d   -> decimal integer\n
+ * %D   -> 64-bit decimal integer\n
+ * %u   -> unsigned decimal integer\n
+ * %U   -> 64-bit unsigned decimal integer\n
+ * %x   -> hexadecimal integer\n
+ * %X   -> 64-bit hexadecimal integer\n
+ * %s   -> string\n
+ * %c   -> character\n
+ * %f   -> float\n
+ * %F   -> double\n
+ * %p   -> change float precision\n
+ * %N   -> hide cursor\n
+ * %n   -> show cursor\n
+ * %B   -> black background\n
+ * %b   -> black foreground\n
+ * %@   -> reset to default colors\n
+ * %%   -> literal percent character, if default, prints next char\n
+ *
  * @param fmt Print format
  * @param ... Attachments
  * @returns NOTHING
@@ -36,11 +55,12 @@
 void printk(const char * fmt, ...);
 
 /*!
- * @brief Print a character with default color attribute
+ * @brief Print a character with color attributes
  * @param c Character
+ * @param attr Color attributes
  * @return NONE
  */
-void put(char c, uint8_t);
+void put(char c, uint8_t attr);
 
 /*!
  * @brief Translate escape code into meaningful actions

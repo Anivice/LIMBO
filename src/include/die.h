@@ -26,13 +26,13 @@
 #define DIE_H
 
 /*!
- * Invoke a kernel panic
+ * Invoke a kernel panic.
  * This will display an error message, show the update and current die time (UNIX timestamp of current time in RTC),
  * and display caller frame trace to indicate who called die().
  * Then, it will enter an endless indefinite halt and will never resume.
- * This is used to indicate an unrecoverable error happened in kernel code.
- * @param str Error message
+ * This is used to indicate an unrecoverable error happened in the kernel code.
+ * @param reason Error message
  */
-[[noreturn]] void die(const char * str);
+[[noreturn]] void die(const char * reason);
 
 #endif //DIE_H

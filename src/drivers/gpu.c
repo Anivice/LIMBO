@@ -83,3 +83,32 @@ void cursor_show()
     const uint8_t al = inb(0x3D5) & 0xDF;
     outb(0x3D5, al);
 }
+
+NO_PLEASE_DONT_OPTIMIZE
+void scroll_one_line()
+{
+    __asm__ __volatile__(
+        "push       %%edi                               \n\t"
+        "pusha                                          \n\t"
+        "mov        $0xB8000,               %%edi       \n\t" // destination
+        "mov        $0xB8000+80*2,          %%esi       \n\t" // src: start of the second line
+        "mov        $2000-80,               %%ecx       \n\t" // { 2000 (all the character on screen) - 80 (first line) } * 2
+        // == all the data on screen except for the first line
+        "cld                                            \n\t" // direction
+        "rep movsw                                      \n\t" // move
+        // now we need to clear all the characters at the bottom of the screen
+        "mov        $0xB8000+1920*2,        %%edi       \n\t" // dest
+        "mov        $80,                    %%ecx       \n\t" // count
+        "scroll_one_line.clear_bottom:                  \n\t"
+        "    movb   $' ',                   (%%edi)     \n\t"
+        "    inc    %%edi                               \n\t"
+        "    movb   $0x07,                  (%%edi)     \n\t"
+        "    inc    %%edi                               \n\t"
+        "loop scroll_one_line.clear_bottom              \n\t"
+        "popa                                           \n\t"
+        "pop        %%edi                               \n\t"
+        :
+        :
+        : "memory", "cc"
+        );
+}
