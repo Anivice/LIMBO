@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines the kernel side C-style printf-like function
  */
 
 #ifndef PRINTK_H

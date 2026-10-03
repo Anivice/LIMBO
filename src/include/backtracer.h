@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines a backtrace functionality for GCC C code
  **/
 
 #ifndef BACKTRACER_H

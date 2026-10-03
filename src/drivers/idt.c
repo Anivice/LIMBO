@@ -1,5 +1,6 @@
 /*!
  * @file idt.c
+ * @brief This file defines IDT interrupt helper
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines IDT interrupt helper
  **/
 
 #include "idt.h"

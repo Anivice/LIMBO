@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines multiple types
  **/
 
 #ifndef TYPES_H

@@ -1,5 +1,6 @@
 /*!
  * @file ide.c
+ * @brief This file defines IDE disk reader and writer
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines IDE disk reader and writer
  **/
 
 #include "ide.h"

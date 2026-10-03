@@ -220,32 +220,32 @@ _entry_point: ; _entry_point()
     call        print
 
     pusha
-	XOR         CX,                     CX
-	XOR         DX,                     DX
-	MOV         AX,                     0xE801
-	INT         0x15		                            ; request upper memory size
-	JC SHORT    .ERR
-	CMP         AH,                     0x86		    ; unsupported function
-	JE SHORT    .ERR
-	CMP         AH,                     0x80		    ; invalid command
-	JE SHORT    .ERR
-	JCXZ        .USEAX		                            ; was the CX result invalid?
-	MOV         AX,                     CX
-	MOV         BX,                     DX
-.USEAX:
-	; AX = number of contiguous Kb, 1M to 16M
-	; BX = contiguous 64Kb pages above 16M
-	mov word    [argv],                 AX
-	mov word    [argv+4],               BX
-	JMP         .END
-.ERR:
+	xor         cx,                     cx
+	xor         dx,                     dx
+	mov         ax,                     0xe801
+	int         0x15		                            ; request upper memory size
+	jc short    .err
+	cmp         ah,                     0x86		    ; unsupported function
+	je short    .err
+	cmp         ah,                     0x80		    ; invalid command
+	je short    .err
+	jcxz        .useax		                            ; was the cx result invalid?
+	mov         ax,                     cx
+	mov         bx,                     dx
+.useax:
+	; ax = number of contiguous kb, 1m to 16m
+	; bx = contiguous 64kb pages above 16m
+	mov word    [argv],                 ax
+	mov word    [argv+4],               bx
+	jmp         .end
+.err:
     mov         si,                     memory_err
     call        print
     cli
-    .ERR_LOOP:
+    .err_loop:
         hlt
-    jmp .ERR_LOOP
-.END:
+    jmp .err_loop
+.end:
     popa
 
     mov         ah,                     0x01            ; INT10h, AH=01h -> set cursor shape
@@ -417,7 +417,9 @@ _entry_point: ; _entry_point()
     mov         cr0,                    eax
 
     ; Enter 32bit Protected Mode:
-    jmp  dword  0x0018:flush16      ; use jmp to force clear CPU cache generated in 16bit mode
+    jmp  dword  0x0018:flush16  ; use jmp to swap the descriptor
+                                ; and sometimes, some tutorials may say it also force clear the CPU cache generated in 16bit mode
+                                ; but the main goal here is descriptor swap, since we cannot modify that directly
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  ____ ___  ____  _ _     _____           _            _           _   __  __           _       ;;

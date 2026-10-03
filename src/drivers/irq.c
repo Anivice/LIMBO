@@ -1,5 +1,6 @@
 /*!
  * @file irq.c
+ * @brief This file defines interrupt dummies for kernel, for debug purposes only
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines interrupt dummies for kernel, for debug purposes only
  **/
 
 #include "irq.h"

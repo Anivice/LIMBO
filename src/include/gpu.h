@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines GPU VGA video editor functions
  **/
 
 #ifndef GPU_H

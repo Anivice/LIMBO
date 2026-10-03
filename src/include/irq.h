@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines IRQ dummies for kernel, for debug purposes only
  **/
 
 #ifndef IRQ_DUMMIES_H

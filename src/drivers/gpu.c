@@ -1,5 +1,6 @@
 /*!
  * @file gpu.c
+ * @brief This file defines GPU VGA video editor functions
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines GPU VGA video editor functions
  **/
 
 #include "gpu.h"

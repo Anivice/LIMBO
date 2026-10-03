@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines a kernel panic routine to completely halt kernel in case of a critical error
  **/
 
 #ifndef DIE_H

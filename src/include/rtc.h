@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines RTC interrupt routines and helpers
  **/
 
 #ifndef RTC_H

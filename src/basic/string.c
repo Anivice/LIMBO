@@ -1,5 +1,6 @@
 /*!
  * @file string.c
+ * @brief This file defines string helpers for kernel
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines string helpers for kernel
  **/
 
 #include "string.h"

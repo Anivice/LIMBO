@@ -1,5 +1,6 @@
 /*!
  * @file io.c
+ * @brief This file defines C wrapper for instructions `in` and `out`
  *
  * @copyright
  * Copyright 2025 Anivice Ives
@@ -19,7 +20,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * @brief This file defines C wrapper for instructions `in` and `out`
  **/
 
 #include "io.h"
