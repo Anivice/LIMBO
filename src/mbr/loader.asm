@@ -219,34 +219,36 @@ _entry_point: ; _entry_point()
     mov         si,                     greet
     call        print
 
-    pusha
-	xor         cx,                     cx
-	xor         dx,                     dx
-	mov         ax,                     0xe801
-	int         0x15		                            ; request upper memory size
-	jc short    .err
-	cmp         ah,                     0x86		    ; unsupported function
-	je short    .err
-	cmp         ah,                     0x80		    ; invalid command
-	je short    .err
-	jcxz        .useax		                            ; was the cx result invalid?
-	mov         ax,                     cx
-	mov         bx,                     dx
-.useax:
-	; ax = number of contiguous kb, 1m to 16m
-	; bx = contiguous 64kb pages above 16m
-	mov word    [argv],                 ax
-	mov word    [argv+4],               bx
-	jmp         .end
-.err:
+;; BIOS GET MEMORY LAYOUT
+    mov         ebx,                    0           ; continuation value = 0 for first call
+    xor         ebp,                    ebp
+    mov         bp,                     argv
+    mov         ax,                     ds
+    mov         es,                     ax
+.E820_loop:
+    mov         eax,                    0xE820
+    mov         edx,                    0x534D4150  ; 'SMAP'
+    mov         ecx,                    16*4        ; buffer size
+    mov         di,                     bp          ; ES:DI -> buffer
+    int         0x15
+    jc          .E820_done                          ; CF=1: error or end of list
+
+    cmp         eax,                    0x534D4150  ; verify signature
+    jne         .E820_err
+
+    add dword   [argc],                 ecx
+    add         ebp,                    ecx
+    test        ebx,                    ebx         ; EBX = 0 means last entry
+    jnz         .E820_loop                          ; otherwise continue
+    jmp         .E820_done
+.E820_err:
     mov         si,                     memory_err
     call        print
     cli
     .err_loop:
         hlt
     jmp .err_loop
-.end:
-    popa
+.E820_done:
 
     mov         ah,                     0x01            ; INT10h, AH=01h -> set cursor shape
     mov         ch,                     0x20            ; start scanline = 32 (beyond 0–15)
@@ -519,7 +521,7 @@ flat_cs_mode:
     lea             eax,                    [edi + argv]
     sub             esp,                    8
     push            eax
-    push dword      2
+    push dword      [edi + argc]
     mov             eax,                    0x100000
     call            eax
 
@@ -813,7 +815,10 @@ idt_descriptor_idt_start:
     dd 0                ; base = linear address of table
 
 argv:
-    times 16*4 db 0
+    times 256 db 0
+
+argc:
+    times 4 db 0
 
 segment _data_tail align=16
 _data_end:

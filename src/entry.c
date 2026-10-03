@@ -45,32 +45,38 @@ void enable_fpu()
     __asm__ volatile ("fninit");     /* initialise x87 state */
 }
 
+static const char * value_to_human(
+    char * buffer, const uint32_t buffer_size,
+    const uint64_t value)
+{
+    static const char * size_values[] = {"B", "KB", "MB", "GB", "TB", "PB"};
+    constexpr uint32_t size_values_size = sizeof(size_values) / sizeof(size_values[0]);
+    uint32_t level = 0;
+    double human_value;
 
+    if (value == 0) {
+        sprintf(buffer, buffer_size, "0 %s", size_values[0]);
+        return buffer;
+    }
 
-// typedef struct __attribute__((packed)) int_frame_privchg {
-//     uint32_t eip;
-//     uint32_t cs;
-//     uint32_t eflags;
-//     uint32_t user_esp;
-//     uint32_t user_ss;
-// } int_frame_privchg_t;
+    human_value = (double)value;
 
-// __attribute__((naked, optimize(0)))           /* suppress C prologue/epilogue */
-// void build_and_iret(int_frame_privchg_t *f)
-// {
-//     __asm__ __volatile__ (
-//         "mov  4(%esp), %eax \n\t"   /* eax = pointer to frame      */
-//         "pushl 16(%eax)     \n\t"   /* SS  */
-//         "pushl 12(%eax)     \n\t"   /* ESP */
-//         "pushl  8(%eax)     \n\t"   /* EFLAGS */
-//         "pushl  4(%eax)     \n\t"   /* CS  */
-//         "pushl  0(%eax)     \n\t"   /* EIP */
-//     );
-//
-//     __asm__ volatile("lldt %%ax" :: "a"(0x30):"cc", "memory");
-//     __asm__ volatile("ltr %%ax" :: "a"(0x38):"cc", "memory");
-//                                __asm__ volatile ("iret");
-// }
+    while (level + 1 < size_values_size && human_value >= 1024.0) {
+        human_value /= 1024.0;
+        ++level;
+    }
+
+    sprintf(buffer, buffer_size, "%F %s", human_value, size_values[level]);
+    return buffer;
+}
+
+typedef struct e820_entry_t {
+    uint64_t base;      // offset 0:  starting physical address
+    uint64_t length;    // offset 8:  size of the range in bytes
+    uint32_t type;      // offset 16: 1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
+} __attribute__((packed)) e820_entry_t;
+
+_Static_assert(sizeof(e820_entry_t) == 20, "e820_entry_t must be 20 bytes");
 
 /*!
  * @brief Kernel entry point and stage dispatcher.
@@ -81,12 +87,8 @@ void enable_fpu()
 [[noreturn, gnu::section(".kernel_entry_point")]]
 NO_PLEASE_DONT_OPTIMIZE
 // __attribute__((section(".kernel_entry_point")))
-void main(const int32_t argc, const int32_t *argv)
+void main(const int32_t argc, const uint8_t *argv)
 {
-    if (argc != 2 || argv == nullptr) {
-        die("Invalid loader arguments");
-    }
-
     if (memcmp(MAGIC, "Anivice", 7) != 0) {
         die("Kernel data corrupted");
     }
@@ -97,28 +99,31 @@ void main(const int32_t argc, const int32_t *argv)
 
     enable_fpu();
 
-    uint32_t below_16MB = (uint32_t)argv[0] * 1024u;
-    uint32_t beyond_16MB = (uint32_t)argv[1] * 64u * 1024u;
-    bool memory_hole = (beyond_16MB != 0) &&
-                       (below_16MB != 15u * 1024u * 1024u);
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-    printk("0x00000000 - 0x00100000: Kernel Cache\n");
-    printk("0x00100000 - 0x00200000: Kernel Code\n");
-    if (memory_hole)
-    {
-        printk("0x00200000 - 0x%x: Main memory\n", below_16MB);
-        printk("0x%x - 0x%x: Main memory\n", below_16MB, beyond_16MB);
-    } else {
-        printk("0x200000 - 0x%x: Main memory\n", below_16MB + beyond_16MB + 1024u * 1024u);
-    }
-    printk("System has %u KB memory in total\n", (below_16MB + beyond_16MB) / 1024u + 1024u);
 
-    if (memory_hole)
+    int entries = argc / (int)sizeof(e820_entry_t);
+    if (argc % (int)sizeof(e820_entry_t) != 0)
+        die("Loader gives unaligned entries"); // FUCK
+
+    char buff [32];
+    printk("Memory layout:\n");
+    for (int i = 0; i < entries; i++)
     {
-        die("Memory hole in lower 16MB part");
+        e820_entry_t entry;
+        memcpy(&entry, argv + sizeof(e820_entry_t) * i, sizeof(entry));
+        printk("Range: [0x%X, 0x%X), %s, type: ", entry.base, entry.base + entry.length,
+            value_to_human(buff, sizeof(buff), entry.length));
+        switch (entry.type) { //  1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
+            case 1: printk("usable"); break;
+            case 2: printk("reserved"); break;
+            case 3: printk("ACPI reclaimable"); break;
+            case 4: printk("ACPI NVS"); break;
+            default: printk("%u", entry.type); break;
+        }
+        printk("\n");
     }
 
-    // int a = 12 / 0;
+    printk("Range: [0x100000, 0x%x): kernel image\n", 0x100000u + KERNEL_IMAGE_BYTES);
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");

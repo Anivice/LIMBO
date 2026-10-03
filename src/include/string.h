@@ -67,7 +67,21 @@ int memcmp(const void * s1, const void * s2, uint32_t n);
 #define str(a)  #a
 
 /*!
- * @brief C-style printf-like message printer
+ * @brief C-style sprintf-like printer.\n
+ * WARNING: it uses its own derivatives for color codes and numbers/strings:\n
+ * %d   -> decimal integer\n
+ * %D   -> 64-bit decimal integer\n
+ * %u   -> unsigned decimal integer\n
+ * %U   -> 64-bit unsigned decimal integer\n
+ * %x   -> hexadecimal integer\n
+ * %X   -> 64-bit hexadecimal integer\n
+ * %s   -> string\n
+ * %c   -> character\n
+ * %f   -> float\n
+ * %F   -> double\n
+ * %p   -> change float precision\n
+ * %%   -> literal percent character, if default, prints next char\n
+ *
  * @param buffer Buffer
  * @param buffer_length Buffer length
  * @param fmt Print format

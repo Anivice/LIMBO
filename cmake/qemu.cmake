@@ -74,4 +74,15 @@ function(add_emulation_target NAME FLOPPY_DRIVE_FILE)
             USES_TERMINAL
             VERBATIM
     )
+
+    add_custom_target(${NAME}_curses
+            COMMAND ${QEMU_EXEC} -smp 1 -cpu pentium3,fpu
+            -drive if=floppy,index=0,format=raw,file=${CMAKE_BINARY_DIR}/${FLOPPY_DRIVE_FILE}
+            -drive if=ide,index=0,format=raw,file=${HARD_DISK_FILE}
+            -m 32M -rtc base=localtime -boot a ${QEMU_ADDITIONAL_ARGS} -display curses
+            COMMENT "Booting from floppy disk ${FLOPPY_DRIVE_FILE}..."
+            DEPENDS ${HARD_DISK_FILE} ${CMAKE_BINARY_DIR}/${FLOPPY_DRIVE_FILE}
+            USES_TERMINAL
+            VERBATIM
+    )
 endfunction()
