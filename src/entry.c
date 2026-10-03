@@ -104,17 +104,19 @@ void main(const int32_t argc, const uint8_t *argv)
 
     char buff [32];
     printk("Memory layout:\n");
+    uint64_t celling = 0;
     for (int i = 0; i < entries; i++)
     {
         e820_entry_t entry;
         memcpy(&entry, argv + sizeof(e820_entry_t) * i, sizeof(entry));
+        celling = entry.base + entry.length;
         printk("Range: [0x%X, 0x%X), %s, type: ", entry.base, entry.base + entry.length,
             value_to_human(buff, sizeof(buff), entry.length));
         switch (entry.type) { //  1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
             case 1: printk("usable"); break;
             case 2: { // evict reserved entries
                 printk("reserved");
-                const auto length = entry.length / 4096 + (entry.length % 4096 == 0 ? 0 : 1);
+                auto const length = entry.length / 4096 + (entry.length % 4096 == 0 ? 0 : 1);
                 for (uint64_t j = 0; j < length; j++) {
                     page_entry_set_present(entry.base + j * 4096, 0);
                 }
@@ -132,10 +134,20 @@ void main(const int32_t argc, const uint8_t *argv)
     printk("Range: [0x178000, 0x18E000): Kernel data slot: 88 KiB, containing .rodata, .data, .bss, and COMMON.\n");
     printk("Range: [0x18E000, 0x195DF9): Symbol-map storage and padding.\n");
     printk("Range: [0x195DF9, 0x195E00): \"Anivice\".\n");
-    page_entry_set_present(0xB8000, 1);
+    page_entry_set_present(0xB8000, 1); // VRAM
+    for (uint32_t i = 0x90000; i < 0x9FC00; i += 4096) {
+        page_entry_set_present(i, 1); // Kernel stacks
+    }
+
+    // evict common address spaces:
+    for (uint32_t i = 0; i < 0x90000; i += 4096) {
+        page_entry_set_present(i, 0);
+    }
+    for (uint64_t i = 0x197000; i < celling; i += 4096) {
+        page_entry_set_present(i, 0);
+    }
 
     page_enable();
-
     rtc_irq_init();
     __asm__ volatile ("sti" ::: "memory");
 
