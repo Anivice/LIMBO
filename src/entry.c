@@ -246,11 +246,10 @@ void main(const int32_t argc, const uint8_t *argv)
     };
 
     uint64_t new_page, allocated_pages = 0;
-    do {
-        new_page = allocate_page(&page_alloc_object);
+    while ((new_page = allocate_page(&page_alloc_object)) != UINT64_MAX) {
         printk("Allocated a new page %U\n", new_page);
         ++allocated_pages;
-    } while (new_page != UINT64_MAX);
+    }
 
     printk("Allocated %U pages\n", allocated_pages);
 
