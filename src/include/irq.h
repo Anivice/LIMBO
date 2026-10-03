@@ -24,6 +24,12 @@
 #ifndef IRQ_DUMMIES_H
 #define IRQ_DUMMIES_H
 
+// Keep external hardware interrupts clear of CPU vectors 0x00..0x1F.
+#define PIC_MASTER_VECTOR_BASE 0x20
+#define PIC_SLAVE_VECTOR_BASE  0x28
+#define RTC_IRQ_VECTOR         (PIC_SLAVE_VECTOR_BASE + 0)
+
+// Install the IDT and remap both PICs, leaving IF clear and all IRQs masked.
 void install_irq();
 
 #endif //IRQ_DUMMIES_H

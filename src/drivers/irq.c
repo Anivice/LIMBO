@@ -27,6 +27,39 @@
 #include "printk.h"
 #include "idt.h"
 #include "die.h"
+#include "io.h"
+
+// The dummy port write provides an I/O delay for legacy PIC hardware.
+static void pic_write(const uint16_t port, const uint8_t value)
+{
+    outb(port, value);
+    outb(0x80, 0);
+}
+
+// Boot-time only: BIOS calls are finished and install_irq() has cleared IF.
+static void pic_remap()
+{
+    // Mask everything before initialization, and again afterwards because
+    // ICW1 clears the mask registers. Drivers enable only the IRQs they own.
+    pic_write(0x21, 0xFF);
+    pic_write(0xA1, 0xFF);
+
+    // ICW1: initialize, edge triggered, cascaded, ICW4 follows.
+    pic_write(0x20, 0x11);
+    pic_write(0xA0, 0x11);
+    // ICW2: vector bases (each must be aligned to eight vectors).
+    pic_write(0x21, PIC_MASTER_VECTOR_BASE);
+    pic_write(0xA1, PIC_SLAVE_VECTOR_BASE);
+    // ICW3: slave is wired to master IRQ2; slave's cascade identity is 2.
+    pic_write(0x21, 1u << 2);
+    pic_write(0xA1, 2);
+    // ICW4: 8086 mode, explicit EOI (not automatic EOI).
+    pic_write(0x21, 0x01);
+    pic_write(0xA1, 0x01);
+
+    pic_write(0x21, 0xFF);
+    pic_write(0xA1, 0xFF);
+}
 
 #define IRQ_STUB(n)                                                     \
     __attribute__((naked, used, NO_OPTIMIZATION))                       \
@@ -182,4 +215,6 @@ void install_irq()
     idt_descriptor.limit = sizeof(idt) - 1;
     idt_descriptor.base = (uint32_t)idt;
     __asm__ volatile ("lidt %0" : : "m"(idt_descriptor) : "memory");
+
+    pic_remap();
 }

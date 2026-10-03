@@ -25,6 +25,7 @@
 #include "rtc.h"
 #include "io.h"
 #include "idt.h"
+#include "irq.h"
 #include "string.h"
 #include "marco.h"
 
@@ -103,7 +104,7 @@ void rtc_irq_init()
 {
     uptime = 0;
     const uint32_t flags = rtc_irq_save();
-    idt_set_gate(0x70, (uint32_t)rtc_irq_handler, 0x10, 0x8E);
+    idt_set_gate(RTC_IRQ_VECTOR, (uint32_t)rtc_irq_handler, 0x10, 0x8E);
 
     outb(0x70, RTC_REGISTER_B);
     const uint8_t b = inb(0x71);

@@ -83,8 +83,6 @@ NO_PLEASE_DONT_OPTIMIZE
 // __attribute__((section(".kernel_entry_point")))
 void main(const int32_t argc, const int32_t *argv)
 {
-    install_irq();
-
     if (argc != 2 || argv == nullptr) {
         die("Invalid loader arguments");
     }
@@ -93,9 +91,11 @@ void main(const int32_t argc, const int32_t *argv)
         die("Kernel data corrupted");
     }
 
-    enable_fpu();
+    install_irq();
     rtc_irq_init();
     __asm__ volatile ("sti" ::: "memory");
+
+    enable_fpu();
 
     uint32_t below_16MB = (uint32_t)argv[0] * 1024u;
     uint32_t beyond_16MB = (uint32_t)argv[1] * 64u * 1024u;
@@ -118,7 +118,7 @@ void main(const int32_t argc, const int32_t *argv)
         die("Memory hole in lower 16MB part");
     }
 
-    int a = 12 / 0;
+    // int a = 12 / 0;
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
