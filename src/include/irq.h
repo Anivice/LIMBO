@@ -24,8 +24,6 @@
 #ifndef IRQ_DUMMIES_H
 #define IRQ_DUMMIES_H
 
-typedef void (*irq_stub_t)();
-/// Dummy IRQ table
-extern irq_stub_t const irq_dummy_table[256];
+void install_irq();
 
 #endif //IRQ_DUMMIES_H

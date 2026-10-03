@@ -45,19 +45,7 @@ void enable_fpu()
     __asm__ volatile ("fninit");     /* initialise x87 state */
 }
 
-static NO_PLEASE_DONT_OPTIMIZE
-void install_irq()
-{
-    __asm__ volatile ("cli" ::: "memory");
 
-    for (unsigned i = 0; i < 256; ++i) {
-        idt_set_gate(i, (uint32_t)irq_dummy_table[i], 0x10, 0x8E);
-    }
-
-    idt_descriptor.limit = sizeof(idt) - 1;
-    idt_descriptor.base = (uint32_t)idt;
-    __asm__ volatile ("lidt %0" : : "m"(idt_descriptor) : "memory");
-}
 
 // typedef struct __attribute__((packed)) int_frame_privchg {
 //     uint32_t eip;
