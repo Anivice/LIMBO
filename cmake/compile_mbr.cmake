@@ -62,13 +62,23 @@ function(add_asm_target FILE)
     set(INFILE ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
     set(OUTFILE ${CMAKE_CURRENT_BINARY_DIR}/${FILEBASE}.bin)
 
-    # Generate binary file from assembly source
-    add_custom_command(
-            OUTPUT ${OUTFILE}
-            COMMAND ${NASM_EXECUTABLE} -O0 -X gnu -f bin ${INFILE} -o ${OUTFILE}
-            DEPENDS ${INFILE}
-            COMMENT "Assembling ${INFILE} with NASM"
-    )
+    if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        # Generate binary file from assembly source
+        add_custom_command(
+                OUTPUT ${OUTFILE}
+                COMMAND ${NASM_EXECUTABLE} -O0 -X gnu -f bin ${INFILE} -o ${OUTFILE}
+                DEPENDS ${INFILE}
+                COMMENT "Assembling ${INFILE} with NASM"
+        )
+    else ()
+        # Generate binary file from assembly source
+        add_custom_command(
+                OUTPUT ${OUTFILE}
+                COMMAND ${NASM_EXECUTABLE} -O3 -X gnu -f bin ${INFILE} -o ${OUTFILE}
+                DEPENDS ${INFILE}
+                COMMENT "Assembling ${INFILE} with NASM"
+        )
+    endif ()
 
     # Create a target to manage dependencies and build
     add_custom_target(${FILEBASE}_MBR_BINARY ALL

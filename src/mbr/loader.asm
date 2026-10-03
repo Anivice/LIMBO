@@ -791,7 +791,7 @@ prepare_to_move_kernel: db "[LIMBO LOADER]: Move kernel data from 0x9E00-0x9FBFF
 done:   db "done.", 0x0A, 0x00
 
 align 16, db 0
-gdt: resb 128
+gdt: times 128 db 0
 
 gdt_boundary: dw 0
 gdt_base: dd 0
@@ -813,7 +813,7 @@ idt_descriptor_idt_start:
     dd 0                ; base = linear address of table
 
 argv:
-    resb 16*4
+    times 16*4 db 0
 
 segment _data_tail align=16
 _data_end:
@@ -827,7 +827,7 @@ _data_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 segment _stack_reserved align=16
 _stack_start:
-    resb 0x1FF
+    times 0x1FF db 0
 _stack_end:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
