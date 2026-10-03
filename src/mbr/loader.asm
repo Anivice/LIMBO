@@ -228,7 +228,7 @@ _entry_point: ; _entry_point()
 .E820_loop:
     mov         eax,                    0xE820
     mov         edx,                    0x534D4150  ; 'SMAP'
-    mov         ecx,                    16*4        ; buffer size
+    mov         ecx,                    20          ; buffer size
     mov         di,                     bp          ; ES:DI -> buffer
     int         0x15
     jc          .E820_done                          ; CF=1: error or end of list
@@ -499,7 +499,7 @@ flat_cs_mode:
     call            print_done
     ; now we load the actual kernel.
     ; kernel is a C non-PIE program mapped itself to 1MB-2MB
-    ; with first 640KB being the code section, and higher 384KB being the data section
+    ; 1199 × 512 = 613888 bytes = 599.5 KiB
     mov             eax,                    prepare_to_move_kernel
     call            dsprint
     mov             ecx,                    KERNEL_BYTES

@@ -28,6 +28,7 @@
 #include "irq.h"
 #include "die.h"
 #include "marco.h"
+#include "page.h"
 
 /*!
  * @brief Enable FPU
@@ -93,13 +94,10 @@ void main(const int32_t argc, const uint8_t *argv)
     }
 
     install_irq();
-    rtc_irq_init();
-    __asm__ volatile ("sti" ::: "memory");
-
     enable_fpu();
+    page_init();
 
-    printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
-
+    // get memory info, loader gives it to us from the BIOS
     int entries = argc / (int)sizeof(e820_entry_t);
     if (argc % (int)sizeof(e820_entry_t) != 0)
         die("Loader gives unaligned entries"); // FUCK
@@ -114,7 +112,14 @@ void main(const int32_t argc, const uint8_t *argv)
             value_to_human(buff, sizeof(buff), entry.length));
         switch (entry.type) { //  1=usable RAM, 2=reserved, 3=ACPI reclaimable, 4=ACPI NVS
             case 1: printk("usable"); break;
-            case 2: printk("reserved"); break;
+            case 2: { // evict reserved entries
+                printk("reserved");
+                const auto length = entry.length / 4096 + (entry.length % 4096 == 0 ? 0 : 1);
+                for (uint64_t j = 0; j < length; j++) {
+                    page_entry_set_present(entry.base + j * 4096, 0);
+                }
+            }
+            break;
             case 3: printk("ACPI reclaimable"); break;
             case 4: printk("ACPI NVS"); break;
             default: printk("%u", entry.type); break;
@@ -122,7 +127,19 @@ void main(const int32_t argc, const uint8_t *argv)
         printk("\n");
     }
 
-    printk("Range: [0x100000, 0x%x): kernel image (lives in upper the 1MB range)\n", 0x100000u + KERNEL_IMAGE_BYTES);
+    printk("Range: [0x90000, 0x9FC00): kernel stacks.\n");
+    printk("Range: [0x100000, 0x178000): Kernel code slot: 480 KiB.\n");
+    printk("Range: [0x178000, 0x18E000): Kernel data slot: 88 KiB, containing .rodata, .data, .bss, and COMMON.\n");
+    printk("Range: [0x18E000, 0x195DF9): Symbol-map storage and padding.\n");
+    printk("Range: [0x195DF9, 0x195E00): \"Anivice\".\n");
+    page_entry_set_present(0xB8000, 1);
+
+    page_enable();
+
+    rtc_irq_init();
+    __asm__ volatile ("sti" ::: "memory");
+
+    printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");

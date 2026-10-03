@@ -59,6 +59,8 @@ typedef struct __attribute__((packed)) {
     uint8_t  base_24_31;
 } segment_descriptor_t;
 
+_Static_assert(sizeof(segment_descriptor_t) == 8, "segment_descriptor_t must be 8 bytes");
+
 /// Local Description Table
 typedef struct ldt_descriptor_t__ {
     uint16_t limit;
@@ -136,6 +138,9 @@ typedef struct page_dir_t__ {
     uint32_t AVL:3;             // Ignored by CPU, can be repurposed by programmer
     uint32_t page_dir_base:20;  // Page directory base address
 } __attribute__((packed)) page_dir_t;
+
+_Static_assert(sizeof(page_t) == 4, "PTE must be 4 bytes");
+_Static_assert(sizeof(page_dir_t) == 4, "PDE must be 4 bytes");
 
 /*!
  * @brief Escape actions denoted by escape code '%'
