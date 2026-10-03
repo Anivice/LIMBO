@@ -25,7 +25,6 @@
 #include "string.h"
 #include "printk.h"
 #include "rtc.h"
-#include "idt.h"
 #include "irq.h"
 #include "die.h"
 #include "marco.h"
@@ -123,7 +122,7 @@ void main(const int32_t argc, const uint8_t *argv)
         printk("\n");
     }
 
-    printk("Range: [0x100000, 0x%x): kernel image\n", 0x100000u + KERNEL_IMAGE_BYTES);
+    printk("Range: [0x100000, 0x%x): kernel image (lives in upper the 1MB range)\n", 0x100000u + KERNEL_IMAGE_BYTES);
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
