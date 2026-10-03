@@ -24,10 +24,8 @@
 #ifndef IRQ_DUMMIES_H
 #define IRQ_DUMMIES_H
 
+typedef void (*irq_stub_t)();
 /// Dummy IRQ table
-extern void * irq_dummy_table[256];
-
-/// Initialize dummy IRQ service routines
-void irq_dummies_init();
+extern irq_stub_t const irq_dummy_table[256];
 
 #endif //IRQ_DUMMIES_H

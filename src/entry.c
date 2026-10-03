@@ -49,7 +49,6 @@ static NO_PLEASE_DONT_OPTIMIZE
 void install_irq()
 {
     __asm__ volatile ("cli" ::: "memory");
-    irq_dummies_init();
 
     for (unsigned i = 0; i < 256; ++i) {
         idt_set_gate(i, (uint32_t)irq_dummy_table[i], 0x10, 0x8E);
@@ -130,6 +129,8 @@ void main(const int32_t argc, const int32_t *argv)
     {
         die("Memory hole in lower 16MB part");
     }
+
+    int a = 12 / 0;
 
     while (rtc_get_uptime() < 3)
         __asm__ volatile ("hlt" ::: "memory");
