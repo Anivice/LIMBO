@@ -1,17 +1,15 @@
 #ifndef LIMBO_PAGE_ALLOCATOR_H
 #define LIMBO_PAGE_ALLOCATOR_H
 
-/*
- * [0, 0x196000)                | Reserved by LIMBO: 406 pages,
- *                              |   including low memory, bitmap, stack, kernel, and paging structures
- * [0x196000, RAM − 0x20000)    | Allocatable
- * [RAM − 0x20000, RAM)         | Firmware reservation: 32 pages
- *
- * expected free pages = RAM_in_MiB × 256 − 406 − 32
- */
-
 #include "bitmap.h"
 
+/* Physical frames: [0, 2 MiB) permanently reserved; only E820 usable RAM
+ * above it may fund allocations and page tables. Physical and virtual
+ * allocation are separate: allocate_page returns a frame index, not a pointer.
+ */
+#define KERNEL_IDENTITY_END         0x200000u
+#define KERNEL_HEAP_START           0x80000000u
+#define KERNEL_HEAP_END             0xC0000000u
 #define page_alloc_bitmap_start     ((uint8_t*)(void*)(256u*1024))
 #define page_alloc_bitmap_end       ((uint8_t*)(void*)(256u*1024 + 128*1024))
 #define page_alloc_bitmap_size      ((uint32_t)(128*1024))
@@ -22,18 +20,22 @@ typedef struct page_alloc_bitmap_t {
     uint32_t free_pages;
 } page_alloc_bitmap_t;
 
-/*!
- * Allocate a new page. The page will be set as present upon allocation, usable at ring 0.
- * @param this page allocator context
- * @return New page index
- */
-[[nodiscard]] uint64_t allocate_page(page_alloc_bitmap_t * this);
+/* After E820 reservations, before page_enable(). Context must outlive heap. */
+void page_allocator_init(page_alloc_bitmap_t *context);
 
-/*!
- * Free a page.
- * @param this page allocator context
- * @param page page number
+/* Raw physical frames, not automatically mapped. Only pass owned, unmapped
+ * frames to free_page; never free malloc storage or paging structures here.
+ * OOM panics. Single CPU: operations preserve IF and exclude IRQ reentry.
  */
-void free_page(page_alloc_bitmap_t * this, uint64_t page);
+[[nodiscard]] uint64_t allocate_page(page_alloc_bitmap_t *context);
+void free_page(page_alloc_bitmap_t *context, uint64_t page);
 
-#endif //LIMBO_PAGE_ALLOCATOR_H
+/* After page_enable(): contiguous virtual storage backed by arbitrary frames.
+ * 16-byte alignment/header, page-granular allocation. malloc(0) returns nullptr;
+ * free(nullptr) is a no-op. Other allocation failures panic with OOM.
+ * Only exact live pointers returned by malloc may be passed to free.
+ */
+[[nodiscard]] void *malloc(uint32_t size);
+void free(void *pointer);
+
+#endif

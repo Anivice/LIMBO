@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.31.6)
 project(LIMBO LANGUAGES ASM C)
 
+set(LIMBO_HEAP_TEST_MIB "0" CACHE STRING "Heap QEMU test: 0, 8, 16, 24, or 32 MiB")
+if (NOT LIMBO_HEAP_TEST_MIB MATCHES "^(0|8|16|24|32)$")
+    message(FATAL_ERROR "LIMBO_HEAP_TEST_MIB must be 0, 8, 16, 24, or 32")
+endif ()
+add_compile_definitions(LIMBO_HEAP_TEST_MIB=${LIMBO_HEAP_TEST_MIB})
+
 include(cmake/compile_mbr.cmake)
 add_asm_target(src/mbr/bootsec.asm)
 add_asm_target(src/mbr/loader.asm)

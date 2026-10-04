@@ -31,7 +31,6 @@
 #include "page.h"
 #include "abs/bitmap.h"
 #include "abs/page_allocator.h"
-#include "abs/random.h"
 
 /*!
  * @brief Enable FPU
@@ -159,7 +158,6 @@ void main(const int32_t argc, const uint8_t *argv)
         const uint64_t end = entry.base + bytes;
         for (uint64_t addr = entry.base & ~0xFFFULL;
              addr < end; addr += 4096) {
-            page_entry_set_present((uint32_t)addr, 0);
             set_bit(&page_alloc_bitmap, addr / 4096, 1);
         }
     }
@@ -172,56 +170,26 @@ void main(const int32_t argc, const uint8_t *argv)
     }
 
     /* Retain low memory for the loader/firmware/stack and reserve the entire
-     * loaded kernel, including its paging structures and symbol map.
+     * first 2 MiB, including the kernel, paging structures and symbol map.
      * Mapping a page and owning a physical frame are separate decisions.
      */
     for (uint32_t addr = 0;
-         addr < ((0x100000u + KERNEL_IMAGE_BYTES + 0xFFFu) & ~0xFFFu);
+         addr < KERNEL_IDENTITY_END;
          addr += 4096) {
         set_bit(&page_alloc_bitmap, addr / 4096, 1);
     }
 
-    printk("Range: [0x40000, 0x60000):   Memory Bitmap.\n");
-    printk("Range: [0x90000, 0x9FC00):   Kernel Stacks.\n");
-    printk("Range: [0x100000, 0x178000): Kernel code slot: 480 KiB.\n");
-    printk("Range: [0x178000, 0x18E000): Kernel data slot: 88 KiB.\n");
-    printk("Range: [0x18E000, 0x195DF9): Symbol-map.\n");
-    printk("Range: [0x195DF9, 0x195E00): \"Anivice\".\n");
-    page_entry_set_present(0xB8000, 1); // VRAM
-    for (uint32_t i = 0x90000; i < 0x9FC00; i += 4096) {
-        page_entry_set_present(i, 1); // Kernel stacks
-        set_bit(&page_alloc_bitmap, i / 4096, 1); // KSS, not allocable
-    }
+    _Static_assert(0x100000u + KERNEL_IMAGE_BYTES <= KERNEL_IDENTITY_END,
+                   "Kernel must fit in the bootstrap identity map");
+    printk("Range: [0, 0x200000): reserved bootstrap identity map.\n");
 
-    // evict common address spaces:
-    for (uint32_t i = 0; i < 0x90000; i += 4096) {
-        page_entry_set_present(i, 0);
+    static page_alloc_bitmap_t page_alloc_object;
+    page_alloc_object.bitmap = page_alloc_bitmap;
+    for (uint32_t page = 0; page < page_alloc_bitmap_particles; ++page) {
+        if (!get_bit(&page_alloc_bitmap, page)) ++page_alloc_object.free_pages;
     }
-    for (uint32_t i = 0x196000; i < 0x400000u; i += 4096) {
-        page_entry_set_present(i, 0);
-    }
-
-    // Set GDT page as present
-    struct {
-        uint16_t limit;
-        uint32_t base;
-    } __attribute__((packed)) gdtr;
-
-    __asm__ volatile ("sgdt %0" : "=m"(gdtr));
-    const uint64_t gdt_end = (uint64_t)gdtr.base + gdtr.limit + 1u;
-    for (uint64_t addr = (uint64_t)gdtr.base & ~0xFFFULL;
-         addr < gdt_end;
-         addr += 4096)
-    {
-        page_entry_set_present((uint32_t)addr, 1);
-        set_bit(&page_alloc_bitmap, addr / 4096, 1); // GDTR, not allocable
-    }
-
-    for (uint32_t addr = (uint32_t)page_alloc_bitmap_start;
-         addr < (uint32_t)page_alloc_bitmap_end; addr += 4096)
-    {
-        page_entry_set_present(addr, 1);
-    }
+    printk("Usable physical frames above 2 MiB: %u\n", page_alloc_object.free_pages);
+    page_allocator_init(&page_alloc_object);
 
     page_enable();
     rtc_irq_init();
@@ -229,26 +197,18 @@ void main(const int32_t argc, const uint8_t *argv)
 
     printk("%rL%gITTLE %rI%g386 %rM%gICROKERNEL %rB%gAREMETAL %rO%gS " LIMBO_VERSION "\n");
 
-    init_genrand((uint32_t)rtc_get_uptime() ^ 0xDEADBEEF);
+    /* Demonstrate allocation, writable memory, and release. */
+    uint32_t *sample = malloc(8192);
+    sample[0] = 0x12345678;
+    sample[2047] = 0x87654321;
+    printk("malloc(8192) -> 0x%x, first=0x%x last=0x%x\n",
+           (uint32_t)sample, sample[0], sample[2047]);
+    free(sample);
 
-    int free_pages = 0;
-    for (uint64_t i = 0; i < page_alloc_bitmap_particles; i++)
-    {
-        if (!get_bit(&page_alloc_bitmap, i)) {
-            ++free_pages;
-        }
+    uint64_t counter = 0;
+    while (true) {
+        printk("malloc(1) -> 0x%x, count=%U\n", malloc(1), counter);
     }
-
-    printk("free_pages: %d, usable memory: %s\n", free_pages,
-        value_to_human(buff, sizeof(buff), free_pages * 4096));
-
-    // usable page_alloc_bitmap_t
-    page_alloc_bitmap_t page_alloc_object = {
-        .bitmap = page_alloc_bitmap,
-        .free_pages = free_pages
-    };
-
-    while (true) (void)allocate_page(&page_alloc_object); // trigger OOM
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point");

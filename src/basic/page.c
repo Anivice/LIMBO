@@ -2,6 +2,8 @@
 #include "string.h"
 #include "types.h"
 #include "marco.h"
+#include "die.h"
+#include "abs/page_allocator.h"
 
 __attribute__((aligned(4096))) page_dir_t page_directory[1024];
 __attribute__((aligned(4096))) page_t page_table[1024];
@@ -12,7 +14,7 @@ void page_init()
     memset(page_table, 0, sizeof(page_table));
 
     for (uint32_t i = 0; i < 1024; ++i) {
-        page_table[i].P = 1;
+        page_table[i].P = i < KERNEL_IDENTITY_END / 4096;
         page_table[i].RW = 1;
         page_table[i].US = 0;
         page_table[i].page_base = i;
@@ -23,6 +25,11 @@ void page_init()
     page_directory[0].US = 0;
     page_directory[0].page_dir_base =
         ((uint32_t)page_table) >> 12;
+    /* Recursive page-table access: [0xFFC00000, 4 GiB). */
+    page_directory[1023].page_dir_base = ((uint32_t)page_directory) >> 12;
+    page_directory[1023].RW = 1;
+    page_directory[1023].P = 1;
+
 }
 
 NO_PLEASE_DONT_OPTIMIZE
@@ -32,15 +39,26 @@ void tlb_flush()
                       ::: "eax", "memory");
 }
 
+NO_PLEASE_DONT_OPTIMIZE
 void page_entry_set_present(const uint32_t vaddr, const int p)
 {
     const uint32_t pdi = vaddr >> 22;          /* which PDE (directory index) */
     const uint32_t pti = (vaddr >> 12) & 0x3FF;/* which PTE (table index)     */
 
-    if (!page_directory[pdi].P)
+    if (!page_directory[pdi].P) {
+        if (p) die("Missing page table");
         return;
+    }
 
-    page_table[pti].P = p;
+    uint32_t cr0;
+    __asm__ volatile ("mov %%cr0, %0" : "=r"(cr0));
+    page_t *table = (cr0 & (1u << 31))
+        ? (page_t *)(0xFFC00000u + pdi * 4096)
+        : (page_t *)((uint32_t)page_directory[pdi].page_dir_base << 12);
+    /* Change presence only; preserve the physical frame of non-identity maps. */
+    table[pti].P = p != 0;
+    /* Flush this address after both mapping and unmapping. */
+    __asm__ volatile ("invlpg (%0)" :: "r"(vaddr) : "memory");
 }
 
 NO_PLEASE_DONT_OPTIMIZE
