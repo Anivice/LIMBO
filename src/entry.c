@@ -205,10 +205,10 @@ void main(const int32_t argc, const uint8_t *argv)
            (uint32_t)sample, sample[0], sample[2047]);
     free(sample);
 
-    uint64_t counter = 0;
-    while (true) {
-        printk("malloc(1) -> 0x%x, count=%U\n", malloc(1), counter);
-    }
+    // uint64_t counter = 0;
+    // while (true) {
+        // printk("malloc(1) -> 0x%x, count=%U\n", malloc(1), ++counter);
+    // }
 
     /////////////////////////////////////////////////////////////
     die("Unexpected reach of the end of kernel entry point");
