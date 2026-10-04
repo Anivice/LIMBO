@@ -70,6 +70,7 @@ add_library(limbo SHARED
         src/include/abs/page_allocator.h src/abs/page_allocator.c
         src/abs/random.c        src/include/abs/random.h
 )
+set_property(TARGET limbo APPEND PROPERTY LINK_DEPENDS ${CMAKE_SOURCE_DIR}/scripts/link.ld)
 target_link_libraries(limbo PRIVATE gcc)
 add_compile_definitions(__DEBUG__)
 target_include_directories(limbo PRIVATE ${CMAKE_SOURCE_DIR}/src/include)

@@ -46,7 +46,7 @@ uint32_t backtrace(uint32_t *addrs, uint32_t max_frames)
         const stackframe_t *frame = (const stackframe_t *)address;
         uint32_t next = (uint32_t)frame->ebp;
         uint32_t ret = frame->eip;
-        if (ret < 0x100000u || ret >= 0x178000u) break;
+        if (ret < 0x100000u || ret >= 0x140000u) break;
         addrs[count++] = ret;
         if (next <= address) break;
         address = next;

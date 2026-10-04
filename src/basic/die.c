@@ -84,7 +84,7 @@ static void get_symbol(const uint32_t ip, uint32_t *sym_ptr, char *sym_name, con
     for (;;) {
         uint32_t address = query_map(&cursor, candidate, sizeof(candidate));
         if (address == 0 || address > ip) break;
-        if (address < 0x100000u || address >= 0x178000u) continue;
+        if (address < 0x100000u || address >= 0x140000u) continue;
 
         *sym_ptr = address;
         if (capacity != 0) {

@@ -20,8 +20,9 @@ map_size=$(stat "/tmp/map.${seed}.raw" --printf=%s)
 
 Magic="Anivice"
 Ssize=$(((1217-18)*512))
-Scode=491520
-Sdata=90112
+# Keep code + data at 568 KiB so the symbol map and magic stay in place.
+Scode=$((256*1024))
+Sdata=$((312*1024))
 Smap=$((Ssize - (Scode + Sdata) - $(echo -n "$Magic" | wc -c)))
 DataLoc=$(grep -E '\s+\.\s=\s0x[0-9|A-Z]+;' < "$SCRIPT_DIR/link.ld" | tail -n 1 | sed -E 's/.*(0x.*);/\1/g')
 
